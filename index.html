@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Le Ranch</title>
+<meta name="description" content="Ton ranch du Far West : nourris tes bêtes chaque jour, récolte œufs et lait, agrandis ton enclos.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="theme-color" content="#7ec8e3">
+<style>
+  :root {
+    --wood: #8a5a2b;
+    --wood-dark: #5c3a18;
+    --gold: #ffd27a;
+    --cream: #fff6e3;
+    --violet: #2a1445;
+    --panel: #331d5c;
+    --panel-border: #5a3d94;
+    --muted: #c9b3e8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    background: #7ec8e3;
+    color: var(--cream);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ——— Barre du haut ——— */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    height: calc(52px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 10px 0;
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(#2a1445ee, #2a1445cc);
+    border-bottom: 2px solid var(--wood-dark);
+  }
+  header .chip {
+    font-size: 14px; color: var(--gold); text-decoration: none;
+    border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 7px 10px; background: var(--panel); white-space: nowrap; cursor: pointer;
+    font-family: inherit;
+  }
+  header .titre { flex: 1; font-size: 17px; font-weight: bold; color: var(--gold); text-align: center;
+    text-shadow: 0 1px 0 #000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  header .pieces { font-size: 16px; font-weight: bold; color: var(--gold); background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 10px; padding: 7px 10px; white-space: nowrap; }
+
+  /* ——— Scène ——— */
+  #scene { position: fixed; inset: 0; overflow: hidden; }
+  #ciel { position: absolute; inset: 0; transition: background 2s; background: linear-gradient(#8fd3f4 0%, #cdeffd 34%, #cdeffd 100%); }
+  body.soir #ciel { background: linear-gradient(#f5a623 0%, #fdd8a8 34%, #fde9c8 100%); }
+  body.nuit #ciel { background: linear-gradient(#141034 0%, #2a2560 34%, #3a3172 100%); }
+  body.automne #ciel { background: linear-gradient(#e8a25e 0%, #f5cf9b 34%, #f8e3c0 100%); }
+  body.hiver #ciel { background: linear-gradient(#a8c8e8 0%, #dceaf8 34%, #eef5fc 100%); }
+
+  #soleil {
+    position: absolute; top: 9%; right: 12%; width: 62px; height: 62px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff8c8, #ffd93b 65%, #ffb52e);
+    box-shadow: 0 0 46px #ffe27a99;
+  }
+  body.nuit #soleil { background: radial-gradient(circle at 38% 34%, #ffffff, #e8e6ff 60%, #b9b4e8); box-shadow: 0 0 34px #ffffff55; }
+  .etoile { position: absolute; color: #fff; font-size: 11px; opacity: 0; transition: opacity 1.5s; pointer-events: none; }
+  body.nuit .etoile { opacity: .9; animation: scintille 2.6s infinite alternate; }
+  @keyframes scintille { from { opacity: .35; } to { opacity: 1; } }
+  .nuage { position: absolute; font-size: 44px; opacity: .92; animation: derive linear infinite; pointer-events: none; }
+  body.nuit .nuage { opacity: .25; }
+  @keyframes derive { from { transform: translateX(-120px); } to { transform: translateX(110vw); } }
+
+  #collines { position: absolute; left: 0; right: 0; top: 0; height: 40%; pointer-events: none; }
+  #collines svg { position: absolute; bottom: 0; width: 100%; height: 100%; }
+  #sol {
+    position: absolute; left: 0; right: 0; bottom: 0; top: 30%;
+    background:
+      radial-gradient(ellipse 90px 26px at 20% 40%, #6da746 0 60%, transparent 61%),
+      radial-gradient(ellipse 110px 30px at 70% 70%, #6da746 0 60%, transparent 61%),
+      radial-gradient(ellipse 80px 22px at 45% 88%, #6da746 0 60%, transparent 61%),
+      linear-gradient(#7cb350, #55913c);
+    transition: filter 2s;
+  }
+  body.soir #sol { filter: sepia(.25) brightness(.95); }
+  body.nuit #sol { filter: brightness(.55) saturate(.7); }
+  body.automne #sol { filter: sepia(.35) hue-rotate(-12deg); }
+  body.hiver #sol { filter: brightness(1.25) saturate(.45); }
+
+  #cloture { position: absolute; left: 0; right: 0; top: 30%; height: 34px; pointer-events: none; transform: translateY(-58%); }
+  #cloture .rail { position: absolute; left: 0; right: 0; height: 5px; background: var(--wood); border-radius: 3px; box-shadow: 0 2px 0 #00000033; }
+  #cloture .rail.r1 { top: 8px; } #cloture .rail.r2 { top: 22px; }
+  #cloture .poteau { position: absolute; top: 0; width: 8px; height: 34px; background: var(--wood-dark); border-radius: 3px; }
+
+  #grange { position: absolute; left: 3%; top: 13.5%; width: min(30vw, 170px); pointer-events: none;
+    filter: drop-shadow(0 6px 8px #00000044); transition: filter 2s; }
+  body.nuit #grange { filter: brightness(.6) drop-shadow(0 6px 8px #00000066); }
+
+  /* Panneau du ranch */
+  #panneau { position: absolute; right: 3%; top: 20.5%; width: 140px; text-align: center; cursor: pointer; z-index: 6; }
+  #panneau .pancarte {
+    background: linear-gradient(#a06a33, var(--wood)); border: 2px solid var(--wood-dark);
+    border-radius: 8px; padding: 6px; font-size: 13px; font-weight: bold; color: var(--cream);
+    box-shadow: 0 3px 5px #0000004d; overflow: hidden;
+  }
+  #panneau .pied { width: 8px; height: 30px; background: var(--wood-dark); margin: 0 auto; }
+
+  /* ——— Animaux ——— */
+  .animal { position: absolute; width: 96px; margin-left: -48px; text-align: center; cursor: pointer;
+    transition: left linear, top linear; z-index: 10; }
+  .animal .bete { font-size: 44px; line-height: 1.05; display: inline-block; transition: transform .4s;
+    filter: drop-shadow(0 3px 3px #00000038); }
+  .animal.bb .bete { font-size: 30px; }
+  .animal.droite .bete { transform: scaleX(-1); }
+  .animal.bb.droite .bete { transform: scaleX(-1); }
+  .animal .tag { font-size: 12px; font-weight: bold; color: #fff; background: #00000055;
+    border-radius: 8px; padding: 1px 7px; display: inline-block; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .animal .bulle { height: 34px; font-size: 24px; line-height: 34px; pointer-events: none; }
+  .animal.faim .bulle::after { content: "🌾"; display: inline-block; animation: sautille 1s infinite; }
+  .animal.bb.faim .bulle::after { content: "🍼"; }
+  .animal.mange .bulle::after { content: "😋"; display: inline-block; }
+  .animal .bulle.produit { animation: sautille .8s infinite; filter: drop-shadow(0 0 6px #ffd27a); }
+  body.nuit .animal.calme .bulle::after { content: "💤"; opacity: .8; }
+  @keyframes sautille { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .animal.mange .bete { animation: picore .5s 2; }
+  @keyframes picore { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-14deg) translateY(4px); } }
+
+  /* Renard */
+  #renard { position: absolute; width: 80px; margin-left: -40px; text-align: center; cursor: pointer;
+    transition: left linear, top linear; z-index: 30; animation: tremble .5s infinite; }
+  #renard .bete { font-size: 52px; filter: drop-shadow(0 3px 3px #00000040); display: inline-block; }
+  #renard .bulle { height: 32px; font-size: 24px; line-height: 32px; animation: sautille .7s infinite; }
+  @keyframes tremble { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+  /* Décors */
+  .deco { position: absolute; pointer-events: none; z-index: 5; filter: drop-shadow(0 3px 3px #00000030); margin-left: -18px; }
+  .saison { position: absolute; pointer-events: none; z-index: 5; filter: drop-shadow(0 3px 3px #00000030); }
+  .particule { position: absolute; top: -50px; pointer-events: none; z-index: 40; animation: chute linear infinite; }
+  @keyframes chute { to { transform: translateY(115vh) rotate(300deg); } }
+  .mare { position: absolute; width: 120px; height: 52px; margin-left: -60px; z-index: 4;
+    background: radial-gradient(ellipse at 50% 45%, #9fdcf0, #4f9fd9 78%); border-radius: 50%; border: 4px solid #6da746; }
+  .mare .canard { position: absolute; top: -6px; left: 12px; font-size: 24px; animation: nage 7s ease-in-out infinite alternate; }
+  @keyframes nage { from { transform: translateX(0) scaleX(-1); } 50% { transform: translateX(62px) scaleX(-1); } 51% { transform: translateX(62px) scaleX(1); } to { transform: translateX(0) scaleX(1); } }
+
+  /* Potager */
+  #potager { position: absolute; left: 3%; bottom: 96px; width: 158px; height: 92px; z-index: 8;
+    background: repeating-linear-gradient(0deg, #6d4a26 0 14px, #7d5730 14px 24px);
+    border: 3px solid var(--wood-dark); border-radius: 10px; }
+  #potager .etiquette { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-weight: bold; color: #fff; background: #00000055; border-radius: 8px;
+    padding: 1px 7px; white-space: nowrap; }
+  .plot { position: absolute; width: 64px; height: 38px; text-align: center; cursor: pointer; }
+  .plot .pl { font-size: 24px; line-height: 38px; display: inline-block; }
+  .plot.prete .pl { animation: sautille .8s infinite; filter: drop-shadow(0 0 6px #ffd27a); }
+  .plot .soif { position: absolute; top: -8px; right: 2px; font-size: 15px; animation: sautille 1.2s infinite; }
+
+  /* Effets volants */
+  .vole { position: fixed; z-index: 200; font-size: 26px; pointer-events: none; transition: all 1s cubic-bezier(.3,-0.2,.6,1); }
+  .flotte { position: fixed; z-index: 200; font-size: 19px; font-weight: bold; color: var(--gold);
+    text-shadow: 0 1px 2px #000; pointer-events: none; animation: monte 1.3s forwards; }
+  @keyframes monte { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-64px); } }
+  .coeurfx { position: fixed; z-index: 200; font-size: 22px; pointer-events: none; animation: monte 1.2s forwards; }
+  .paille { position: fixed; z-index: 200; font-size: 18px; pointer-events: none; animation: tombe .8s forwards; }
+  @keyframes tombe { from { opacity: 1; transform: translateY(-30px) rotate(0); } to { opacity: 0; transform: translateY(16px) rotate(100deg); } }
+
+  /* ——— Barre du bas ——— */
+  footer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(#2a1445cc, #2a1445ee);
+    border-top: 2px solid var(--wood-dark);
+  }
+  #chores { flex: 1; font-size: 14px; color: var(--cream); line-height: 1.35; min-width: 0; }
+  #chores b { color: var(--gold); }
+  .btn {
+    font-family: inherit; font-size: 16px; font-weight: bold; cursor: pointer;
+    background: linear-gradient(#a06a33, var(--wood)); color: var(--cream);
+    border: 2px solid var(--wood-dark); border-radius: 12px; padding: 11px 13px;
+    box-shadow: 0 3px 0 var(--wood-dark);
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--wood-dark); }
+  .btn.or { background: linear-gradient(#ffe3a1, var(--gold)); color: #5c3a18; border-color: #b8934f; box-shadow: 0 3px 0 #b8934f; }
+  .btn:disabled { opacity: .45; box-shadow: none; transform: none; cursor: default; }
+  .btn .puce { display: inline-block; min-width: 17px; font-size: 11px; background: #d94f3d; color: #fff;
+    border-radius: 9px; padding: 1px 4px; vertical-align: top; margin: -4px 0 0 2px; }
+
+  /* ——— Fenêtres ——— */
+  .voile { position: fixed; inset: 0; z-index: 100; background: #140a26cc;
+    display: flex; align-items: flex-end; justify-content: center; }
+  .fenetre {
+    width: 100%; max-width: 470px; max-height: 88dvh; overflow-y: auto;
+    background: var(--violet); border: 2px solid var(--panel-border); border-bottom: none;
+    border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .fenetre h2 { margin: 0 0 4px; color: var(--gold); font-size: 21px; text-align: center; }
+  .fenetre .sous { margin: 0 0 14px; color: var(--muted); font-size: 14px; text-align: center; }
+  .fermer { position: sticky; top: 0; float: right; margin: -6px -4px 0 8px; z-index: 2;
+    background: var(--panel); color: var(--cream); border: 1px solid var(--panel-border);
+    border-radius: 50%; width: 36px; height: 36px; font-size: 17px; cursor: pointer; }
+
+  .rayon { margin: 16px 0 4px; font-size: 16px; color: var(--gold); font-weight: bold;
+    border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; }
+  .article { display: flex; align-items: center; gap: 12px; padding: 9px 6px; border-bottom: 1px dashed #5a3d9455; }
+  .article .em { font-size: 32px; width: 44px; text-align: center; flex-shrink: 0; }
+  .article .infos { flex: 1; min-width: 0; }
+  .article .infos b { font-size: 16px; }
+  .article .infos small { display: block; color: var(--muted); font-size: 13px; }
+  .article .btn { font-size: 15px; padding: 10px 12px; white-space: nowrap; }
+  .article .ok { color: #2ee6a8; font-size: 14px; font-weight: bold; white-space: nowrap; }
+
+  .champ {
+    width: 100%; font-family: inherit; font-size: 20px; text-align: center;
+    background: var(--panel); color: var(--cream); border: 2px solid var(--panel-border);
+    border-radius: 12px; padding: 12px; margin: 10px 0;
+  }
+  .grand-emoji { text-align: center; font-size: 74px; margin: 6px 0; }
+  .ligne-btn { display: flex; gap: 10px; margin-top: 12px; }
+  .ligne-btn .btn { flex: 1; }
+  .msg { text-align: center; color: #ff9db0; font-size: 14px; min-height: 18px; margin: 6px 0 0; }
+
+  /* Bon de commande du saloon */
+  .bon {
+    background: var(--cream); color: var(--wood-dark); border: 2px solid #b8934f; border-radius: 4px;
+    padding: 14px 16px; margin: 0 10px 14px; box-shadow: 3px 3px 0 #00000045; transform: rotate(-1deg);
+  }
+  .bon .entete { text-align: center; font-size: 13px; letter-spacing: 2px; border-bottom: 1px dashed #b8934f;
+    padding-bottom: 6px; margin-bottom: 10px; }
+  .bon .ligne { display: flex; align-items: center; gap: 10px; font-size: 16px; padding: 4px 0; }
+  .bon .ligne .ok { color: #1d7a4f; font-weight: bold; }
+  .bon .ligne .manque { color: #b6432e; font-weight: bold; }
+  .bon .pied { text-align: center; font-size: 15px; border-top: 1px dashed #b8934f; padding-top: 8px; margin-top: 10px; }
+
+  /* Voisins */
+  .voisin { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    font-family: inherit; font-size: 17px; color: var(--cream); background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 14px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+  .voisin .av { font-size: 30px; }
+  .voisin small { color: var(--muted); display: block; font-size: 13px; }
+
+  #bandeau-visite { position: fixed; top: calc(56px + env(safe-area-inset-top)); left: 10px; right: 10px; z-index: 45;
+    background: #2a1445e0; border: 1px solid var(--panel-border); border-radius: 14px;
+    padding: 8px 12px; text-align: center; font-size: 13px; color: var(--muted); }
+
+  /* Annonces et fête */
+  #annonce { position: fixed; left: 50%; top: calc(64px + env(safe-area-inset-top)); transform: translateX(-50%);
+    z-index: 210; background: var(--violet); border: 2px solid var(--gold); color: var(--cream);
+    border-radius: 14px; padding: 10px 18px; font-size: 15px; text-align: center; max-width: 88vw;
+    box-shadow: 0 8px 30px #00000080; animation: pop .4s; }
+  #fete { position: fixed; inset: 0; z-index: 150; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  #fete .bandeau { background: #153c30ee; border: 2px solid #2ee6a8; color: #2ee6a8;
+    font-size: 22px; font-weight: bold; border-radius: 18px; padding: 18px 26px; text-align: center;
+    animation: pop .5s; box-shadow: 0 10px 40px #00000066; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .confetti { position: fixed; top: -40px; z-index: 149; font-size: 26px; pointer-events: none; animation: pluie linear forwards; }
+  @keyframes pluie { to { transform: translateY(110vh) rotate(320deg); } }
+
+  #bandeau-evenement { position: fixed; left: 10px; right: 10px; bottom: 84px; z-index: 44;
+    background: #3d1f2ee8; border: 1px solid #ff9db0; border-radius: 14px; padding: 8px 12px;
+    text-align: center; font-size: 13px; color: #ffd7de; }
+  #bandeau-evenement.marchand { background: #153c30e8; border-color: #2ee6a8; color: #b8f5dd; }
+  #bandeau-admin { position: fixed; left: 8px; right: 8px; bottom: 84px; z-index: 60;
+    background: #3d1f2e; border: 1px solid #ff9db0; color: #ff9db0; font-size: 13px;
+    border-radius: 12px; padding: 8px 12px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="chip" id="btnRetour" href="https://pierreflory-web.github.io/jeux/">⭐ Mes Jeux</a>
+  <div class="titre" id="hudTitre">Le Ranch</div>
+  <div class="pieces" id="hudPieces">🪙 …</div>
+</header>
+
+<div id="scene">
+  <div id="ciel"></div>
+  <div id="soleil"></div>
+  <div id="collines">
+    <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+      <path d="M0 40 L0 26 Q 18 12 38 24 Q 58 34 74 20 Q 88 10 100 22 L100 40 Z" fill="#5f9440"/>
+      <path d="M0 40 L0 32 Q 25 22 50 32 Q 75 40 100 30 L100 40 Z" fill="#6da746"/>
+    </svg>
+  </div>
+  <div id="sol"></div>
+  <div id="cloture"><div class="rail r1"></div><div class="rail r2"></div></div>
+  <svg id="grange" viewBox="0 0 120 100">
+    <rect id="grangeMur" x="10" y="42" width="100" height="56" fill="#b6432e" stroke="#7e2c1d" stroke-width="3"/>
+    <path d="M2 46 L60 6 L118 46 Z" fill="#8a5a2b" stroke="#5c3a18" stroke-width="3"/>
+    <rect id="grangePorte" x="44" y="58" width="32" height="40" fill="#7e2c1d" stroke="#5c3a18" stroke-width="2.5"/>
+    <path d="M44 58 L76 98 M76 58 L44 98" stroke="#e8d9b8" stroke-width="3"/>
+    <rect x="52" y="20" width="16" height="14" fill="#ffe9b8" stroke="#5c3a18" stroke-width="2.5"/>
+    <path d="M52 27 H68 M60 20 V34" stroke="#5c3a18" stroke-width="2"/>
+  </svg>
+  <div id="panneau" hidden>
+    <div class="pancarte" id="panneauTexte"></div>
+    <div class="pied"></div>
+  </div>
+  <div id="potager" hidden><div class="etiquette">Potager</div></div>
+</div>
+
+<div id="bandeau-visite" hidden></div>
+<div id="bandeau-evenement" hidden></div>
+
+<footer>
+  <div id="chores"></div>
+  <button class="btn" id="btnSaloon" title="Commande du saloon">📜</button>
+  <button class="btn" id="btnVoisins" title="Visiter les voisins">👋</button>
+  <button class="btn or" id="btnShop">🛒</button>
+</footer>
+
+<div id="fete" hidden></div>
+<div id="bandeau-admin" hidden>⚠️ Le ranch n'est pas encore branché au compte : exécute <b>ranch.sql</b> dans Supabase (voir le README du jeu). En attendant, la partie est gardée sur cet appareil.</div>
+
+<!-- Boutique -->
+<div class="voile" id="vShop" hidden>
+  <div class="fenetre">
+    <button class="fermer" onclick="fermer('vShop')">✕</button>
+    <h2>🛒 La Boutique du Ranch</h2>
+    <p class="sous">Ta bourse : <b id="shopPieces" style="color:var(--gold)"></b></p>
+    <div id="shopContenu"></div>
+  </div>
+</div>
+
+<!-- Commande du saloon -->
+<div class="voile" id="vSaloon" hidden>
+  <div class="fenetre">
+    <button class="fermer" onclick="fermer('vSaloon')">✕</button>
+    <h2>📜 La Commande du Saloon</h2>
+    <div id="saloonContenu"></div>
+  </div>
+</div>
+
+<!-- Voisins -->
+<div class="voile" id="vVoisins" hidden>
+  <div class="fenetre">
+    <button class="fermer" onclick="fermer('vVoisins')">✕</button>
+    <h2>👋 Les ranchs voisins</h2>
+    <p class="sous">Rends visite aux autres joueurs et laisse-leur un ❤️ !</p>
+    <div id="voisinsContenu"></div>
+  </div>
+</div>
+
+<!-- Baptême d'un animal -->
+<div class="voile" id="vNom" hidden>
+  <div class="fenetre">
+    <h2 id="nomTitre">Un nouveau compagnon !</h2>
+    <div class="grand-emoji" id="nomEmoji">🐔</div>
+    <p class="sous" id="nomSous">Comment veux-tu l'appeler ?</p>
+    <input class="champ" id="nomChamp" maxlength="14" autocomplete="off">
+    <div class="ligne-btn">
+      <button class="btn" onclick="proposerNom()">🎲 Une idée ?</button>
+      <button class="btn or" onclick="validerNom()">C'est son nom !</button>
+    </div>
+    <p class="msg" id="nomMsg"></p>
+  </div>
+</div>
+
+<!-- Nom du ranch -->
+<div class="voile" id="vNomRanch" hidden>
+  <div class="fenetre">
+    <h2>🪧 Le panneau d'entrée</h2>
+    <div class="grand-emoji">🤠</div>
+    <p class="sous">Quel nom veux-tu donner à ton ranch ?</p>
+    <input class="champ" id="ranchChamp" maxlength="22" autocomplete="off">
+    <div class="ligne-btn">
+      <button class="btn" onclick="proposerNomRanch()">🎲 Une idée ?</button>
+      <button class="btn or" onclick="validerNomRanch()">C'est le nom !</button>
+    </div>
+    <p class="msg" id="ranchMsg"></p>
+  </div>
+</div>
+
+<!-- Bienvenue -->
+<div class="voile" id="vBienvenue" hidden>
+  <div class="fenetre">
+    <h2>🤠 Bienvenue au Ranch !</h2>
+    <div class="grand-emoji">🐔</div>
+    <p class="sous" style="font-size:16px; line-height:1.5;">
+      Voici ton ranch, rien qu'à toi.<br>
+      Nourris tes animaux <b style="color:var(--gold)">chaque jour</b>, récolte ce qu'ils te donnent,
+      et agrandis ton enclos avec tes pièces 🪙.<br><br>
+      Pour bien démarrer, le shérif t'offre ta première poule !
+    </p>
+    <div class="ligne-btn">
+      <button class="btn or" id="btnAdopter">🎁 C'est parti !</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://pierreflory-web.github.io/jeux/points.js"></script>
+<script>
+/* ═══════════ Le Ranch — élevage quotidien de la famille ═══════════
+   Sauvegarde : colonne `ranch` (jsonb) de la table players quand le joueur
+   est connecté sur « Mes Jeux » ; sinon localStorage de l'appareil.
+   Victoire du jour (→ points via MesJeux.award) : tous les animaux
+   nourris et leur récolte ramassée. La commande du saloon rapporte des
+   points à part (gameId « saloon »). */
+
+const SB_URL = "https://xmuohrglecqtpoyzssfj.supabase.co/rest/v1";
+const SB_KEY = "sb_publishable_Y9EMQFz64Vt0n1GAs9wv1A_ciDRgNVz";
+const $ = id => document.getElementById(id);
+
+const ESPECES = {
+  poule:  { emoji: "🐔", nom: "Poule",  prix: 15,  produit: "🥚", cle: "oeuf",    produitNom: "un œuf",             unite: "œuf frais",      gain: 1 },
+  mouton: { emoji: "🐑", nom: "Mouton", prix: 35,  produit: "🧶", cle: "laine",   produitNom: "de la laine",        unite: "pelote de laine", gain: 2 },
+  chevre: { emoji: "🐐", nom: "Chèvre", prix: 50,  produit: "🧀", cle: "fromage", produitNom: "du fromage",         unite: "part de fromage", gain: 3 },
+  cochon: { emoji: "🐖", nom: "Cochon", prix: 70,  produit: "🍄", cle: "truffe",  produitNom: "une truffe",         unite: "truffe",          gain: 4 },
+  vache:  { emoji: "🐄", nom: "Vache",  prix: 90,  produit: "🥛", cle: "lait",    produitNom: "du lait",            unite: "pot de lait",     gain: 5 },
+  cheval: { emoji: "🐴", nom: "Cheval", prix: 130, produit: "🍀", cle: "trefle",  produitNom: "un trèfle chanceux", unite: "trèfle chanceux", gain: 6 }
+};
+const PRENOMS = {
+  poule:  ["Roussette", "Cocotte", "Pépite", "Plumette", "Caroline", "Crêtette"],
+  mouton: ["Bouclette", "Nuage", "Pompon", "Coton", "Câlin", "Moutarde"],
+  chevre: ["Biquette", "Cabriole", "Noisette", "Chipie", "Caprice", "Filou"],
+  cochon: ["Truffe", "Rosette", "Patapouf", "Groin-Groin", "Rondouillard", "Fripouille"],
+  vache:  ["Marguerite", "Caramel", "Meuh-Meuh", "Biscotte", "Pâquerette", "Tachette"],
+  cheval: ["Tornade", "Éclair", "Galopin", "Crinière", "Étoile", "Mistral"]
+};
+const NOMS_RANCH = ["Ranch de la Prairie", "Ranch Arc-en-ciel", "Ranch du Cactus", "Ranch des Étoiles",
+  "Ranch du Grand Canyon", "Ranch de la Pépite d'Or", "Ranch des Trois Collines", "Ranch du Soleil Levant"];
+const ENCLOS = [
+  { cap: 3 },
+  { cap: 5,  prix: 60 },
+  { cap: 7,  prix: 120 },
+  { cap: 10, prix: 220 }
+];
+const DECOS = {
+  fleurs:  { emoji: "🌼", nom: "Coin fleuri",      prix: 12, x: 10, y: 46 },
+  cactus:  { emoji: "🌵", nom: "Cactus du désert", prix: 15, x: 88, y: 44 },
+  arbre:   { emoji: "🌳", nom: "Grand chêne",      prix: 25, x: 76, y: 38 },
+  seau:    { emoji: "🪣", nom: "Abreuvoir",        prix: 28, x: 30, y: 52 },
+  mare:    { emoji: "🦆", nom: "Mare aux canards", prix: 50, x: 66, y: 82 },
+  tracteur:{ emoji: "🚜", nom: "Vieux tracteur",   prix: 60, x: 88, y: 74 }
+};
+const GRAINES = {
+  carotte:   { emoji: "🥕", pousse: "🌱", nom: "Graines de carottes",  prix: 6,  jours: 2, gain: 9 },
+  mais:      { emoji: "🌽", pousse: "🌱", nom: "Graines de maïs",      prix: 10, jours: 3, gain: 15 },
+  tournesol: { emoji: "🌻", pousse: "🌱", nom: "Graines de tournesol", prix: 14, jours: 4, gain: 22 }
+};
+const POTAGER_MAX = 4;
+const RECOMPENSE_SALOON = 15;
+const RECOMPENSE_RENARD = 10;
+
+// ——— Date, graine aléatoire ———
+function jour() {
+  if (window.MesJeux) return MesJeux.today();
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function daySeed() {
+  if (window.MesJeux) return MesJeux.daySeed();
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function mulberry(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hachage(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return h;
+}
+function joursEntre(d1, d2) {
+  if (!d1 || !d2) return 999;
+  return Math.round((new Date(d2) - new Date(d1)) / 86400000);
+}
+
+// ——— Sauvegarde ———
+let session = null;
+let modeSb = false;
+let serverCoins = 0;
+let coinDelta = 0;
+let coinsLocal = 40;
+let etat = null;
+let visite = null;        // { pseudo, avatar, id, etat } pendant une visite
+
+function etatNeuf() {
+  return { nom: "", animaux: [], enclos: 0, decos: [], potager: [], care: "", soins: 0,
+    saloon: "", recolte: { jour: "", n: {} }, renard: "", bebeDernier: jour(),
+    coeurs: [], coeursVus: 0, creele: jour() };
+}
+function normaliser(e) {
+  const n = etatNeuf();
+  for (const k in n) if (e[k] === undefined) e[k] = n[k];
+  return e;
+}
+function pieces() { return modeSb ? serverCoins + coinDelta : coinsLocal; }
+
+async function sb(path, options) {
+  const res = await fetch(SB_URL + path, Object.assign({}, options, {
+    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" }
+  }));
+  if (!res.ok) { const e = new Error("supabase " + res.status); e.status = res.status; throw e; }
+  return res.status === 204 ? null : res.json();
+}
+function chargerLocal(cle) {
+  try { return JSON.parse(localStorage.getItem(cle)); } catch (e) { return null; }
+}
+function sauverLocal() {
+  const cle = session ? "ranch_cache_" + session.id : "ranch_local";
+  try { localStorage.setItem(cle, JSON.stringify({ etat: etat, coins: coinsLocal })); } catch (e) {}
+}
+let saveTimer = null;
+function sauver() {
+  sauverLocal();
+  if (!modeSb) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(envoyer, 1200);
+}
+async function envoyer() {
+  if (!modeSb) return;
+  try {
+    const rows = await sb("/players?select=coins&id=eq." + session.id);
+    const nouveau = Math.max(0, (rows[0].coins || 0) + coinDelta);
+    await sb("/players?id=eq." + session.id, {
+      method: "PATCH",
+      body: JSON.stringify({ ranch: etat, coins: nouveau })
+    });
+    serverCoins = nouveau; coinDelta = 0;
+    majPieces();
+  } catch (e) { /* hors ligne : on réessaiera à la prochaine action */ }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && modeSb && (coinDelta !== 0 || saveTimer)) {
+    clearTimeout(saveTimer); saveTimer = null;
+    envoyer();
+  }
+});
+
+async function charger() {
+  session = window.MesJeux ? MesJeux.session() : chargerLocal("mesjeux_session");
+  if (session && session.id) {
+    try {
+      const rows = await sb("/players?select=id,pseudo,coins,ranch&id=eq." + session.id);
+      if (rows[0]) {
+        modeSb = true;
+        serverCoins = rows[0].coins || 0;
+        etat = normaliser((rows[0].ranch && rows[0].ranch.animaux) ? rows[0].ranch : etatNeuf());
+        return;
+      }
+    } catch (e) {
+      if (e.status === 400) $("bandeau-admin").hidden = false;   // colonne `ranch` absente
+      const cache = chargerLocal("ranch_cache_" + session.id);
+      if (cache) { etat = normaliser(cache.etat); coinsLocal = cache.coins != null ? cache.coins : 40; return; }
+    }
+  }
+  const loc = chargerLocal("ranch_local");
+  if (loc) { etat = normaliser(loc.etat); coinsLocal = loc.coins != null ? loc.coins : 40; }
+  else etat = etatNeuf();
+}
+
+// ——— Petits sons ———
+let audioCtx = null;
+function note(freq, debut, duree, type, vol) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type || "triangle"; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol || .16, audioCtx.currentTime + debut);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + debut + duree);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(audioCtx.currentTime + debut); o.stop(audioCtx.currentTime + debut + duree + .05);
+}
+function son(quoi) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    if (quoi === "miam")   { note(220, 0, .1); note(180, .12, .12); }
+    if (quoi === "piece")  { note(880, 0, .09, "square", .1); note(1320, .09, .16, "square", .1); }
+    if (quoi === "achat")  { note(520, 0, .1); note(660, .1, .1); note(880, .2, .18); }
+    if (quoi === "coeur")  { note(660, 0, .12); note(990, .1, .15); }
+    if (quoi === "fete")   { [523, 659, 784, 1047].forEach((f, i) => note(f, i * .13, .22)); }
+    if (quoi === "renard") { note(330, 0, .1, "sawtooth", .12); note(280, .1, .12, "sawtooth", .12); }
+    if (quoi === "eau")    { note(700, 0, .06, "sine", .12); note(560, .07, .09, "sine", .12); }
+    if (quoi === "non")    { note(140, 0, .22, "sawtooth", .1); }
+  } catch (e) {}
+}
+
+// ——— Heure, saison, décor du ciel ———
+function themeHeure() {
+  const h = new Date().getHours();
+  const m = new Date().getMonth() + 1;
+  let cls = (h >= 21 || h < 7) ? "nuit" : (h >= 18 ? "soir" : "");
+  if (!cls) {
+    if (m >= 10 && m <= 11) cls = "automne";
+    else if (m === 12 || m <= 2) cls = "hiver";
+  }
+  document.body.className = cls;
+}
+function estNuit() { const h = new Date().getHours(); return h >= 21 || h < 7; }
+
+function monterDecorFixe() {
+  for (let i = 0; i < 14; i++) {
+    const e = document.createElement("div");
+    e.className = "etoile"; e.textContent = "✦";
+    e.style.left = Math.random() * 96 + "%";
+    e.style.top = Math.random() * 24 + "%";
+    e.style.animationDelay = Math.random() * 2 + "s";
+    $("scene").insertBefore(e, $("collines"));
+  }
+  [["☁️", 6, 60], ["☁️", 14, 95], ["🌤️", 2, 120]].forEach(([em, top, dur]) => {
+    const n = document.createElement("div");
+    n.className = "nuage"; n.textContent = em;
+    n.style.top = top + "%"; n.style.animationDuration = dur + "s";
+    n.style.animationDelay = -Math.random() * dur + "s";
+    $("scene").insertBefore(n, $("collines"));
+  });
+  const c = $("cloture");
+  for (let p = 0; p <= 100; p += 7) {
+    const po = document.createElement("div");
+    po.className = "poteau"; po.style.left = p + "%";
+    c.appendChild(po);
+  }
+}
+
+// Décos automatiques selon la saison
+function monterSaison() {
+  document.querySelectorAll(".saison, .particule").forEach(n => n.remove());
+  const m = new Date().getMonth() + 1;
+  const fixe = [], particules = [];
+  if (m === 10) {           // octobre : citrouilles au pied de la clôture, feuilles
+    fixe.push(["🎃", 38, 33, 34], ["🎃", 50, 34, 26], ["🎃", 84, 36, 38], ["🍄", 12, 80, 26]);
+    particules.push(["🍂", 6], ["🍁", 7.5], ["🍂", 6.8], ["🍁", 8]);
+  } else if (m === 11) {    // novembre : feuilles mortes
+    particules.push(["🍂", 6], ["🍂", 7.2], ["🍁", 8]);
+  } else if (m === 12) {    // décembre : sapin, bonhomme de neige, flocons
+    fixe.push(["🎄", 80, 40, 44], ["⛄", 14, 78, 38]);
+    particules.push(["❄️", 8], ["❄️", 10], ["❄️", 9], ["❄️", 11]);
+  } else if (m <= 2) {      // janvier-février : flocons
+    fixe.push(["⛄", 14, 78, 38]);
+    particules.push(["❄️", 9], ["❄️", 11], ["❄️", 10]);
+  } else if (m >= 3 && m <= 5) { // printemps : fleurs et pétales
+    fixe.push(["🌸", 42, 34, 26], ["🌷", 55, 35, 24], ["🌸", 90, 48, 26]);
+    particules.push(["🌸", 9], ["🌸", 11]);
+  } else if (m >= 6 && m <= 8) { // été : tournesols et papillons
+    fixe.push(["🌻", 40, 34, 30], ["🌻", 48, 35, 24], ["🦋", 70, 50, 22]);
+  }
+  fixe.forEach(([em, x, y, taille]) => {
+    const n = document.createElement("div");
+    n.className = "saison"; n.textContent = em;
+    n.style.left = x + "%"; n.style.top = y + "%"; n.style.fontSize = taille + "px";
+    $("scene").appendChild(n);
+  });
+  particules.forEach(([em, dur], i) => {
+    const n = document.createElement("div");
+    n.className = "particule"; n.textContent = em;
+    n.style.left = (8 + i * 24 + Math.random() * 12) + "%";
+    n.style.fontSize = (16 + Math.random() * 8) + "px";
+    n.style.animationDuration = dur + "s";
+    n.style.animationDelay = -Math.random() * dur + "s";
+    $("scene").appendChild(n);
+  });
+}
+
+// ——— Rendu du ranch (le sien, ou celui d'un voisin) ———
+const ZONE = { x0: 8, x1: 88, y0: 38, y1: 84 };
+let elAnimaux = {};
+let timers = {};
+
+function etatAffiche() { return visite ? visite.etat : etat; }
+function nomAffiche() {
+  const e = etatAffiche();
+  if (e.nom) return e.nom;
+  const qui = visite ? visite.pseudo : (session && session.pseudo) || null;
+  return qui ? "Le Ranch de " + qui : "Le Ranch";
+}
+
+function toutMonter() {
+  Object.values(timers).forEach(clearTimeout);
+  timers = {}; elAnimaux = {};
+  document.querySelectorAll(".animal, .deco, .mare, #renard").forEach(n => n.remove());
+  const e = etatAffiche();
+  $("hudTitre").textContent = nomAffiche();
+  $("panneau").hidden = !e.nom;
+  $("panneauTexte").textContent = "🤠 " + (e.nom || "");
+  monterDecos();
+  monterPotager();
+  e.animaux.forEach(monterAnimal);
+  majChores();
+}
+
+function monterDecos() {
+  const e = etatAffiche();
+  e.decos.forEach(id => {
+    const d = DECOS[id];
+    if (!d) return;
+    if (id === "mare") {
+      const m = document.createElement("div");
+      m.className = "mare";
+      m.style.left = d.x + "%"; m.style.top = d.y + "%";
+      m.innerHTML = "<span class='canard'>🦆</span>";
+      $("scene").appendChild(m);
+    } else if (id === "fleurs") {
+      const n = document.createElement("div");
+      n.className = "deco";
+      n.style.left = d.x + "%"; n.style.top = d.y + "%";
+      n.style.width = "110px"; n.style.height = "70px";
+      n.innerHTML = "<span style='position:absolute;left:0;top:14px;font-size:30px;'>🌷</span>" +
+        "<span style='position:absolute;left:24px;top:0;font-size:36px;'>🌼</span>" +
+        "<span style='position:absolute;left:56px;top:12px;font-size:30px;'>🌸</span>" +
+        "<span style='position:absolute;left:20px;top:30px;font-size:26px;'>🌻</span>" +
+        "<span style='position:absolute;left:48px;top:34px;font-size:24px;'>🌷</span>";
+      $("scene").appendChild(n);
+    } else {
+      const n = document.createElement("div");
+      n.className = "deco"; n.textContent = d.emoji;
+      n.style.left = d.x + "%"; n.style.top = d.y + "%";
+      n.style.fontSize = (id === "arbre" || id === "tracteur") ? "52px" : "36px";
+      $("scene").appendChild(n);
+    }
+  });
+}
+
+// ——— Animaux ———
+function estBebe(a) { return a.bebe && joursEntre(a.ne, jour()) < 3; }
+function classeAnimal(a) {
+  const j = jour();
+  if (a.bebe && !estBebe(a)) { a.bebe = false; }   // le bébé a grandi
+  if (a.fed !== j) return "faim";
+  if (!a.bebe && a.got !== j) return "prod";
+  return "calme";
+}
+function monterAnimal(a) {
+  const el = document.createElement("div");
+  el.className = "animal";
+  el.dataset.id = a.id;
+  el.innerHTML = "<div class='bulle'></div><div class='bete'>" + ESPECES[a.t].emoji + "</div><div class='tag'>" + echap(a.nom) + "</div>";
+  el.style.left = (ZONE.x0 + Math.random() * (ZONE.x1 - ZONE.x0)) + "%";
+  el.style.top = (ZONE.y0 + Math.random() * (ZONE.y1 - ZONE.y0)) + "%";
+  el.addEventListener("click", () => toucher(a.id));
+  $("scene").appendChild(el);
+  elAnimaux[a.id] = el;
+  majAnimal(a);
+  balade(a.id);
+}
+function majAnimal(a) {
+  const el = elAnimaux[a.id];
+  if (!el) return;
+  const c = classeAnimal(a);
+  el.classList.toggle("bb", !!estBebe(a));
+  el.classList.remove("faim", "calme");
+  const bulle = el.querySelector(".bulle");
+  bulle.classList.remove("produit");
+  bulle.textContent = "";
+  if (visite) {
+    // chez un voisin : on montre juste les cœurs reçus aujourd'hui
+    if ((visite.etat.coeurs || []).some(x => x.a === a.id && x.jour === jour())) bulle.textContent = "❤️";
+    el.classList.add("calme");
+  } else if (c === "faim") el.classList.add("faim");
+  else if (c === "prod") { bulle.classList.add("produit"); bulle.textContent = ESPECES[a.t].produit; }
+  else el.classList.add("calme");
+  el.style.zIndex = 10 + Math.round(parseFloat(el.style.top));
+}
+function balade(id) {
+  clearTimeout(timers[id]);
+  const el = elAnimaux[id];
+  if (!el) return;
+  timers[id] = setTimeout(() => {
+    if (!estNuit() && elAnimaux[id]) {
+      const nx = ZONE.x0 + Math.random() * (ZONE.x1 - ZONE.x0);
+      const ny = ZONE.y0 + Math.random() * (ZONE.y1 - ZONE.y0);
+      const ox = parseFloat(el.style.left);
+      const duree = 2.5 + Math.random() * 3;
+      el.style.transitionDuration = duree + "s, " + duree + "s";
+      el.classList.toggle("droite", nx > ox);
+      el.style.left = nx + "%";
+      el.style.top = ny + "%";
+      el.style.zIndex = 10 + Math.round(ny);
+    }
+    balade(id);
+  }, 2500 + Math.random() * 5000);
+}
+
+function toucher(id) {
+  if (visite) { laisserCoeur(id); return; }
+  const a = etat.animaux.find(x => x.id === id);
+  if (!a) return;
+  const el = elAnimaux[id];
+  const j = jour();
+  const c = classeAnimal(a);
+  if (c === "faim") {
+    son("miam");
+    el.classList.add("mange");
+    const r = el.getBoundingClientRect();
+    for (let i = 0; i < 4; i++) {
+      const p = document.createElement("div");
+      p.className = "paille"; p.textContent = estBebe(a) ? "🍼" : "🌾";
+      p.style.left = (r.left + 12 + Math.random() * 40) + "px";
+      p.style.top = (r.top + 20) + "px";
+      p.style.animationDelay = (i * .12) + "s";
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1200);
+    }
+    a.fed = j;
+    if (a.bebe) a.got = j;
+    setTimeout(() => {
+      el.classList.remove("mange");
+      majAnimal(a);
+      majChores();
+      verifierJournee();
+    }, 1100);
+    sauver();
+  } else if (c === "prod") {
+    a.got = j;
+    son("piece");
+    let gain = ESPECES[a.t].gain;
+    if (evenementDuJour() === "marchand") gain *= 2;
+    if (etat.recolte.jour !== j) etat.recolte = { jour: j, n: {} };
+    etat.recolte.n[ESPECES[a.t].cle] = (etat.recolte.n[ESPECES[a.t].cle] || 0) + 1;
+    volerVersBourse(el, ESPECES[a.t].produit, gain);
+    if (modeSb) coinDelta += gain; else coinsLocal += gain;
+    majAnimal(a);
+    majPieces();
+    majChores();
+    majBoutons();
+    sauver();
+    verifierJournee();
+  } else {
+    son("coeur");
+    const r = el.getBoundingClientRect();
+    const h = document.createElement("div");
+    h.className = "coeurfx"; h.textContent = "❤️";
+    h.style.left = (r.left + r.width / 2 - 10) + "px"; h.style.top = (r.top - 4) + "px";
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1200);
+  }
+}
+function volerVersBourse(depuisEl, emoji, gain) {
+  const r = depuisEl.getBoundingClientRect();
+  const cible = $("hudPieces").getBoundingClientRect();
+  const v = document.createElement("div");
+  v.className = "vole"; v.textContent = emoji;
+  v.style.left = r.left + r.width / 2 + "px"; v.style.top = r.top + "px";
+  document.body.appendChild(v);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    v.style.left = cible.left + cible.width / 2 + "px";
+    v.style.top = cible.top + "px";
+    v.style.transform = "scale(.4)"; v.style.opacity = ".3";
+  }));
+  setTimeout(() => v.remove(), 1050);
+  if (gain) {
+    const f = document.createElement("div");
+    f.className = "flotte"; f.textContent = "+" + gain + " 🪙";
+    f.style.left = r.left + "px"; f.style.top = (r.top - 8) + "px";
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 1300);
+  }
+}
+
+// ——— Potager ———
+const PLOTS_POS = [[6, 4], [82, 4], [6, 48], [82, 48]];
+function monterPotager() {
+  const e = etatAffiche();
+  const p = $("potager");
+  p.querySelectorAll(".plot").forEach(n => n.remove());
+  p.hidden = !e.potager.length;
+  if (p.hidden) return;
+  e.potager.forEach((plot, i) => {
+    const g = GRAINES[plot.g];
+    const el = document.createElement("div");
+    el.className = "plot";
+    el.style.left = PLOTS_POS[i][0] + "px";
+    el.style.top = PLOTS_POS[i][1] + "px";
+    const faits = plot.arrose.length;
+    const prete = faits >= g.jours;
+    const soifAujourdhui = !prete && plot.arrose.indexOf(jour()) === -1;
+    el.classList.toggle("prete", prete);
+    el.innerHTML = "<span class='pl'>" + (prete ? g.emoji : g.pousse) + "</span>" +
+      (soifAujourdhui && !visite ? "<span class='soif'>💧</span>" : "");
+    if (!visite) el.addEventListener("click", () => arroser(i));
+    p.appendChild(el);
+  });
+}
+function arroser(i) {
+  const plot = etat.potager[i];
+  if (!plot) return;
+  const g = GRAINES[plot.g];
+  const j = jour();
+  if (plot.arrose.length >= g.jours) {           // récolte !
+    son("piece");
+    let gain = g.gain;
+    if (evenementDuJour() === "marchand") gain *= 2;
+    const el = $("potager").querySelectorAll(".plot")[i];
+    volerVersBourse(el, g.emoji, gain);
+    if (modeSb) coinDelta += gain; else coinsLocal += gain;
+    etat.potager.splice(i, 1);
+    majPieces();
+    sauver();
+    monterPotager();
+  } else if (plot.arrose.indexOf(j) === -1) {    // arrosage du jour
+    son("eau");
+    plot.arrose.push(j);
+    const el = $("potager").querySelectorAll(".plot")[i];
+    const r = el.getBoundingClientRect();
+    const f = document.createElement("div");
+    f.className = "flotte"; f.textContent = "💧";
+    f.style.left = r.left + "px"; f.style.top = (r.top - 6) + "px";
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 1300);
+    sauver();
+    monterPotager();
+    if (plot.arrose.length >= g.jours) monterPotager();
+  } else {
+    annonce("Déjà arrosé aujourd'hui — reviens demain ! 💧");
+  }
+}
+
+// ——— Événement du jour ———
+function evenementDuJour() {
+  const r = mulberry(daySeed() + 77)();
+  if (r < 0.2) return "renard";
+  if (r < 0.38) return "marchand";
+  return "";
+}
+function monterEvenement() {
+  const b = $("bandeau-evenement");
+  b.hidden = true;
+  b.classList.remove("marchand");
+  if (visite) return;
+  const ev = evenementDuJour();
+  if (ev === "marchand") {
+    b.classList.add("marchand");
+    b.innerHTML = "🧑‍🌾 <b>Le marchand ambulant est là !</b> Toutes les récoltes valent le double aujourd'hui.";
+    b.hidden = false;
+  } else if (ev === "renard" && etat.renard !== jour() && etat.animaux.length) {
+    b.innerHTML = "🦊 <b>Un renard rôde !</b> Touche-le 3 fois pour le chasser (+" + RECOMPENSE_RENARD + " 🪙).";
+    b.hidden = false;
+    monterRenard();
+  }
+}
+let renardTaps = 0;
+function monterRenard() {
+  if ($("renard")) return;
+  renardTaps = 0;
+  const el = document.createElement("div");
+  el.id = "renard";
+  el.innerHTML = "<div class='bulle'>❗</div><div class='bete'>🦊</div>";
+  el.style.left = "70%"; el.style.top = "60%";
+  el.addEventListener("click", () => {
+    renardTaps++;
+    son("renard");
+    if (renardTaps >= 3) {
+      etat.renard = jour();
+      if (modeSb) coinDelta += RECOMPENSE_RENARD; else coinsLocal += RECOMPENSE_RENARD;
+      majPieces();
+      sauver();
+      el.style.transitionDuration = "1s, 1s";
+      el.style.left = "110%"; el.style.top = "30%";
+      setTimeout(() => el.remove(), 1100);
+      $("bandeau-evenement").hidden = true;
+      annonce("🦊 Renard chassé — bien joué, +" + RECOMPENSE_RENARD + " 🪙 !");
+      son("fete");
+    } else {
+      const nx = 10 + Math.random() * 76, ny = 40 + Math.random() * 42;
+      el.style.transitionDuration = ".7s, .7s";
+      el.style.left = nx + "%"; el.style.top = ny + "%";
+    }
+  });
+  $("scene").appendChild(el);
+  // le renard se déplace tout seul
+  (function file() {
+    if (!document.getElementById("renard") || etat.renard === jour()) return;
+    const nx = 10 + Math.random() * 76, ny = 40 + Math.random() * 42;
+    el.style.transitionDuration = "1.6s, 1.6s";
+    el.style.left = nx + "%"; el.style.top = ny + "%";
+    setTimeout(file, 1700 + Math.random() * 1500);
+  })();
+}
+
+// ——— Naissances (~1 fois par mois) ———
+function verifierNaissance() {
+  if (visite || !etat.animaux.length) return;
+  if (joursEntre(etat.bebeDernier, jour()) < 20) return;
+  const adultes = {};
+  etat.animaux.forEach(a => { if (!a.bebe) adultes[a.t] = (adultes[a.t] || 0) + 1; });
+  const candidats = Object.keys(adultes).filter(t => adultes[t] >= 2);
+  if (!candidats.length) return;
+  if (etat.animaux.length >= ENCLOS[etat.enclos].cap) return;
+  const rnd = mulberry(daySeed() + hachage(session ? String(session.id) : "local"));
+  if (rnd() >= 0.08) return;   // ≈ un mois en moyenne (délai de 20 j + tirage quotidien)
+  const t = candidats[Math.floor(rnd() * candidats.length)];
+  etat.bebeDernier = jour();
+  sauver();
+  son("fete");
+  demanderNom(t, false, true);
+}
+
+// ——— Journée soignée → points « Mes Jeux » ———
+function chiffresJour() {
+  const j = jour();
+  const total = etat.animaux.length;
+  const faits = etat.animaux.filter(a => a.fed === j && (a.bebe || a.got === j)).length;
+  return { total, faits };
+}
+function majChores() {
+  if (visite) { $("chores").innerHTML = "Chez " + echap(visite.pseudo) + " — touche un animal pour laisser un ❤️"; return; }
+  const { total, faits } = chiffresJour();
+  if (!total) { $("chores").innerHTML = "Ton enclos est vide — passe à la boutique ! 👉"; return; }
+  if (etat.care === jour()) { $("chores").innerHTML = "⭐ <b>Ranch soigné !</b> Reviens demain."; return; }
+  $("chores").innerHTML = "🌾 Soigne tes bêtes : <b>" + faits + "/" + total + "</b>";
+}
+function verifierJournee() {
+  const { total, faits } = chiffresJour();
+  if (!total || faits < total || etat.care === jour()) return;
+  etat.care = jour();
+  etat.soins = (etat.soins || 0) + 1;
+  sauver();
+  majChores();
+  son("fete");
+  const fete = $("fete");
+  fete.hidden = false;
+  fete.innerHTML = "<div class='bandeau'>⭐ Ranch soigné !<br><small style='font-size:15px;'>Tous tes animaux sont heureux.</small></div>";
+  const POOL = ["🌾", "⭐", "🥚", "🥛", "❤️", "🌼", "🪙"];
+  for (let i = 0; i < 26; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = POOL[i % POOL.length];
+    c.style.left = Math.random() * 96 + "%";
+    c.style.animationDuration = (1.6 + Math.random() * 1.6) + "s";
+    c.style.animationDelay = (Math.random() * .8) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4200);
+  }
+  setTimeout(() => { fete.hidden = true; fete.innerHTML = ""; }, 2600);
+  if (window.MesJeux) {
+    const n = etat.animaux.length;
+    setTimeout(() => {
+      MesJeux.award("ranch", [
+        [20, "Ranch soigné : tous les animaux nourris"],
+        [Math.min(n * 3, 24), n + (n > 1 ? " animaux choyés" : " animal choyé")]
+      ], { animaux: n }).then(() => { if (modeSb) rafraichirCoins(); });
+    }, 2400);
+  }
+}
+async function rafraichirCoins() {
+  try {
+    const rows = await sb("/players?select=coins&id=eq." + session.id);
+    if (rows[0]) { serverCoins = rows[0].coins || 0; majPieces(); }
+  } catch (e) {}
+}
+
+// ——— Commande du saloon ———
+function commandeDuJour() {
+  const possedes = {};
+  etat.animaux.forEach(a => { if (!a.bebe) possedes[a.t] = (possedes[a.t] || 0) + 1; });
+  const types = Object.keys(possedes);
+  if (!types.length) return null;
+  const rnd = mulberry(daySeed() + hachage(session ? String(session.id) : "local") + 5);
+  const nb = types.length > 1 && rnd() < 0.6 ? 2 : 1;
+  const choisis = [];
+  const pool = types.slice();
+  for (let i = 0; i < nb; i++) {
+    const t = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
+    choisis.push({ t: t, q: Math.max(1, Math.min(possedes[t], 1 + Math.floor(rnd() * 2))) });
+  }
+  return choisis;
+}
+function ouvrirSaloon() {
+  const cmd = commandeDuJour();
+  const j = jour();
+  const recolte = etat.recolte.jour === j ? etat.recolte.n : {};
+  let h;
+  if (!cmd) {
+    h = "<p class='sous'>Le saloon n'a rien à te commander tant que ton enclos est vide !</p>";
+  } else {
+    const livree = etat.saloon === j;
+    let tout = true;
+    h = "<p class='sous'>Aujourd'hui, le patron du saloon commande :</p><div class='bon'>" +
+      "<div class='entete'>— SALOON DU CACTUS —</div>" +
+      cmd.map(c => {
+        const e = ESPECES[c.t];
+        const a = recolte[e.cle] || 0;
+        const ok = a >= c.q;
+        if (!ok) tout = false;
+        return "<div class='ligne'><span style='font-size:24px;'>" + e.produit + "</span>" +
+          "<span style='flex:1;'>" + c.q + " " + e.unite + (c.q > 1 ? "s" : "") + "</span>" +
+          "<span class='" + (ok ? "ok" : "manque") + "'>" + (ok ? "tu en as " + a + " ✔" : a + "/" + c.q) + "</span></div>";
+      }).join("") +
+      "<div class='pied'>Récompense : <b>+" + RECOMPENSE_SALOON + " points ⭐</b></div></div>";
+    if (livree) {
+      h += "<p class='sous' style='color:#2ee6a8;'>✔ Commande livrée aujourd'hui — reviens demain !</p>";
+    } else {
+      h += "<div class='ligne-btn'><button class='btn or' " + (tout ? "" : "disabled") + " onclick='livrerSaloon()'>🚚 Livrer la commande</button></div>" +
+        (tout ? "" : "<p class='msg' style='color:var(--muted);'>Ramasse d'abord la récolte demandée aujourd'hui !</p>");
+    }
+    h += "<p class='sous' style='margin-top:12px;color:#8a76b8;'>Une commande par jour — livre ta récolte du jour et gagne des points.</p>";
+  }
+  $("saloonContenu").innerHTML = h;
+  $("vSaloon").hidden = false;
+}
+function livrerSaloon() {
+  const cmd = commandeDuJour();
+  const j = jour();
+  if (!cmd || etat.saloon === j) return;
+  const recolte = etat.recolte.jour === j ? etat.recolte.n : {};
+  if (!cmd.every(c => (recolte[ESPECES[c.t].cle] || 0) >= c.q)) return;
+  etat.saloon = j;
+  sauver();
+  son("fete");
+  fermer("vSaloon");
+  majBoutons();
+  annonce("🚚 Commande livrée au saloon — merci, cow-boy !");
+  if (window.MesJeux) {
+    MesJeux.award("saloon", [[RECOMPENSE_SALOON, "Commande du saloon livrée"]])
+      .then(() => { if (modeSb) rafraichirCoins(); });
+  }
+}
+
+// ——— Visites des voisins ———
+async function ouvrirVoisins() {
+  if (!modeSb) {
+    $("voisinsContenu").innerHTML = "<p class='sous'>Connecte-toi sur « Mes Jeux » pour visiter les ranchs de la famille !</p>";
+    $("vVoisins").hidden = false;
+    return;
+  }
+  $("voisinsContenu").innerHTML = "<p class='sous'>On selle les chevaux…</p>";
+  $("vVoisins").hidden = false;
+  try {
+    const rows = await sb("/players?select=id,pseudo,avatar,ranch&order=pseudo.asc");
+    const autres = rows.filter(r => r.id !== session.id && r.ranch && r.ranch.animaux && r.ranch.animaux.length);
+    if (!autres.length) {
+      $("voisinsContenu").innerHTML = "<p class='sous'>Personne d'autre n'a encore de ranch — sois le premier à faire des jaloux !</p>";
+      return;
+    }
+    $("voisinsContenu").innerHTML = autres.map((r, i) =>
+      "<button class='voisin' data-i='" + i + "'><span class='av'>" + (r.avatar || "🙂") + "</span>" +
+      "<span style='flex:1;'>" + echap(r.ranch.nom || "Le Ranch de " + r.pseudo) +
+      "<small>" + echap(r.pseudo) + " · " + r.ranch.animaux.length + " animau" + (r.ranch.animaux.length > 1 ? "x" : "x") +
+      " · " + (r.ranch.soins || 0) + " jour" + ((r.ranch.soins || 0) > 1 ? "s" : "") + " de soins</small></span><span>➜</span></button>"
+    ).join("");
+    $("voisinsContenu").querySelectorAll(".voisin").forEach(b => {
+      b.addEventListener("click", () => visiter(autres[parseInt(b.dataset.i, 10)]));
+    });
+  } catch (e) {
+    $("voisinsContenu").innerHTML = "<p class='sous'>Impossible d'atteindre les ranchs voisins — réessaie plus tard.</p>";
+  }
+}
+function visiter(r) {
+  fermer("vVoisins");
+  visite = { id: r.id, pseudo: r.pseudo, avatar: r.avatar, etat: normaliser(r.ranch) };
+  $("btnRetour").textContent = "⬅️ Mon ranch";
+  $("btnRetour").removeAttribute("href");
+  $("bandeau-visite").innerHTML = "Tu es en visite chez <b style='color:var(--gold)'>" + echap(r.pseudo) + " " + (r.avatar || "") + "</b> 👋 — regarde, mais ne touche pas !";
+  $("bandeau-visite").hidden = false;
+  $("grangeMur").setAttribute("fill", "#3d6bb0");
+  $("grangePorte").setAttribute("fill", "#274a80");
+  majBoutons();
+  toutMonter();
+  monterEvenement();
+}
+function rentrer() {
+  visite = null;
+  $("btnRetour").textContent = "⭐ Mes Jeux";
+  $("btnRetour").setAttribute("href", "https://pierreflory-web.github.io/jeux/");
+  $("bandeau-visite").hidden = true;
+  $("grangeMur").setAttribute("fill", "#b6432e");
+  $("grangePorte").setAttribute("fill", "#7e2c1d");
+  majBoutons();
+  toutMonter();
+  monterEvenement();
+}
+let coeurEnvoye = false;
+async function laisserCoeur(animalId) {
+  if (!visite || !session) return;
+  const j = jour();
+  const dejaLocal = (visite.etat.coeurs || []).some(x => x.de === session.pseudo && x.jour === j);
+  if (dejaLocal || coeurEnvoye) { annonce("Tu as déjà laissé un ❤️ aujourd'hui — reviens demain !"); return; }
+  coeurEnvoye = true;
+  son("coeur");
+  const el = elAnimaux[animalId];
+  if (el) {
+    const r = el.getBoundingClientRect();
+    const h = document.createElement("div");
+    h.className = "coeurfx"; h.textContent = "❤️";
+    h.style.left = (r.left + r.width / 2 - 10) + "px"; h.style.top = (r.top - 4) + "px";
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1200);
+  }
+  try {
+    // relit le ranch du voisin juste avant d'écrire, pour ne pas écraser sa partie
+    const rows = await sb("/players?select=ranch&id=eq." + visite.id);
+    const leur = normaliser((rows[0] && rows[0].ranch && rows[0].ranch.animaux) ? rows[0].ranch : visite.etat);
+    if ((leur.coeurs || []).some(x => x.de === session.pseudo && x.jour === j)) return;
+    leur.coeurs = (leur.coeurs || []).concat([{ de: session.pseudo, a: animalId, jour: j }]).slice(-20);
+    await sb("/players?id=eq." + visite.id, { method: "PATCH", body: JSON.stringify({ ranch: leur }) });
+    visite.etat = leur;
+    const animal = leur.animaux.find(x => x.id === animalId);
+    annonce("❤️ laissé " + (animal ? "à " + echap(animal.nom) : "") + " — " + echap(visite.pseudo) + " le verra à sa prochaine visite !");
+    const a2 = visite.etat.animaux.find(x => x.id === animalId);
+    if (a2) majAnimal(a2);
+  } catch (e) {
+    coeurEnvoye = false;
+    annonce("Le ❤️ n'est pas parti — réessaie !");
+  }
+}
+function annoncerCoeursRecus() {
+  const nouveaux = (etat.coeurs || []).slice(etat.coeursVus || 0);
+  if (!nouveaux.length) return;
+  const dernier = nouveaux[nouveaux.length - 1];
+  const animal = etat.animaux.find(x => x.id === dernier.a);
+  annonce("💌 " + echap(dernier.de) + " a laissé un ❤️" + (animal ? " à " + echap(animal.nom) : " à ton ranch") +
+    (nouveaux.length > 1 ? " (et " + (nouveaux.length - 1) + " autre" + (nouveaux.length > 2 ? "s" : "") + " ❤️ !)" : " !"));
+  etat.coeursVus = etat.coeurs.length;
+  sauver();
+}
+
+// ——— Boutique ———
+let achatEnCours = null;
+function ouvrirShop() { $("vShop").hidden = false; rendreShop(); }
+function fermer(id) { $(id).hidden = true; }
+function rendreShop() {
+  $("shopPieces").textContent = pieces() + " 🪙";
+  const cap = ENCLOS[etat.enclos].cap;
+  const suivant = ENCLOS[etat.enclos + 1];
+  let h = "<div class='rayon'>🐮 Les animaux <small style='color:var(--muted);font-weight:normal;'>(" +
+    etat.animaux.length + "/" + cap + " places)</small></div>";
+  for (const t in ESPECES) {
+    const e = ESPECES[t];
+    const plein = etat.animaux.length >= cap;
+    const cher = pieces() < e.prix;
+    h += "<div class='article'><div class='em'>" + e.emoji + "</div>" +
+      "<div class='infos'><b>" + e.nom + "</b><small>Donne " + e.produit + " " + e.produitNom + " chaque jour (+" + e.gain + " 🪙)</small></div>" +
+      "<button class='btn' " + (plein || cher ? "disabled" : "") + " onclick=\"acheterAnimal('" + t + "')\">" + e.prix + " 🪙</button></div>";
+  }
+  h += "<div class='rayon'>🚧 L'enclos</div>";
+  if (suivant) {
+    h += "<div class='article'><div class='em'>🚧</div>" +
+      "<div class='infos'><b>Agrandir l'enclos</b><small>" + cap + " ➜ " + suivant.cap + " places pour tes bêtes</small></div>" +
+      "<button class='btn' " + (pieces() < suivant.prix ? "disabled" : "") + " onclick='agrandir()'>" + suivant.prix + " 🪙</button></div>";
+  } else {
+    h += "<div class='article'><div class='em'>🏆</div><div class='infos'><b>Enclos royal</b><small>Ton enclos est au maximum : " + cap + " places !</small></div><span class='ok'>au top ✔</span></div>";
+  }
+  h += "<div class='rayon'>🌱 Le potager <small style='color:var(--muted);font-weight:normal;'>(" + etat.potager.length + "/" + POTAGER_MAX + " carrés)</small></div>";
+  for (const gid in GRAINES) {
+    const g = GRAINES[gid];
+    const plein = etat.potager.length >= POTAGER_MAX;
+    h += "<div class='article'><div class='em'>" + g.emoji + "</div>" +
+      "<div class='infos'><b>" + g.nom + "</b><small>Arrose 💧 " + g.jours + " jours ➜ récolte +" + g.gain + " 🪙</small></div>" +
+      "<button class='btn' " + (plein || pieces() < g.prix ? "disabled" : "") + " onclick=\"planter('" + gid + "')\">" + g.prix + " 🪙</button></div>";
+  }
+  h += "<div class='rayon'>🌼 Les décorations</div>";
+  for (const id in DECOS) {
+    const d = DECOS[id];
+    const a = etat.decos.indexOf(id) !== -1;
+    h += "<div class='article'><div class='em'>" + d.emoji + "</div>" +
+      "<div class='infos'><b>" + d.nom + "</b><small>Pour embellir ton ranch</small></div>" +
+      (a ? "<span class='ok'>installé ✔</span>"
+         : "<button class='btn' " + (pieces() < d.prix ? "disabled" : "") + " onclick=\"acheterDeco('" + id + "')\">" + d.prix + " 🪙</button>");
+    h += "</div>";
+  }
+  h += "<div class='rayon'>🪧 Le panneau</div>" +
+    "<div class='article'><div class='em'>🪧</div>" +
+    "<div class='infos'><b>" + (etat.nom ? "Renommer le ranch" : "Nommer le ranch") + "</b><small>" + (etat.nom ? echap(etat.nom) : "Ton ranch n'a pas encore de nom !") + "</small></div>" +
+    "<button class='btn' onclick=\"fermer('vShop');ouvrirNomRanch()\">gratuit</button></div>";
+  $("shopContenu").innerHTML = h;
+}
+function payer(prix) {
+  if (pieces() < prix) { son("non"); return false; }
+  if (modeSb) coinDelta -= prix; else coinsLocal -= prix;
+  majPieces();
+  return true;
+}
+function acheterAnimal(t) {
+  if (etat.animaux.length >= ENCLOS[etat.enclos].cap) return;
+  if (!payer(ESPECES[t].prix)) return;
+  son("achat");
+  fermer("vShop");
+  demanderNom(t);
+}
+function agrandir() {
+  const suivant = ENCLOS[etat.enclos + 1];
+  if (!suivant || !payer(suivant.prix)) return;
+  etat.enclos++;
+  son("achat");
+  sauver();
+  rendreShop();
+}
+function acheterDeco(id) {
+  if (etat.decos.indexOf(id) !== -1 || !payer(DECOS[id].prix)) return;
+  etat.decos.push(id);
+  son("achat");
+  sauver();
+  toutMonter();
+  ouvrirShop();
+}
+function planter(gid) {
+  if (etat.potager.length >= POTAGER_MAX || !payer(GRAINES[gid].prix)) return;
+  etat.potager.push({ g: gid, arrose: [], plante: jour() });
+  son("achat");
+  sauver();
+  monterPotager();
+  rendreShop();
+}
+
+// ——— Baptêmes ———
+function demanderNom(t, gratuit, naissance) {
+  achatEnCours = { t: t, gratuit: !!gratuit, naissance: !!naissance };
+  $("nomTitre").textContent = naissance ? "🎉 Un bébé est né !" : (gratuit ? "Ta première poule !" : "Un nouveau compagnon !");
+  $("nomEmoji").textContent = naissance ? (t === "poule" ? "🐣" : ESPECES[t].emoji) : ESPECES[t].emoji;
+  $("nomSous").textContent = (naissance ? "Tes " + ESPECES[t].nom.toLowerCase() + "s ont eu un petit ! " : "") +
+    "Comment veux-tu appeler " + (t === "poule" || t === "vache" || t === "chevre" ? "ta " : "ton ") +
+    (naissance ? "bébé " : "") + ESPECES[t].nom.toLowerCase() + " ?";
+  $("nomMsg").textContent = "";
+  $("nomChamp").value = "";
+  proposerNom();
+  $("vNom").hidden = false;
+}
+function proposerNom() {
+  const pool = PRENOMS[achatEnCours.t];
+  const dejas = etat.animaux.map(a => a.nom);
+  const libres = pool.filter(n => dejas.indexOf(n) === -1);
+  const src = libres.length ? libres : pool;
+  $("nomChamp").value = src[Math.floor(Math.random() * src.length)];
+}
+function validerNom() {
+  const nom = $("nomChamp").value.trim().slice(0, 14);
+  if (!nom) { $("nomMsg").textContent = "Il lui faut un petit nom !"; return; }
+  const a = {
+    id: "a" + Date.now().toString(36) + Math.floor(Math.random() * 999),
+    t: achatEnCours.t, nom: nom, fed: "", got: ""
+  };
+  if (achatEnCours.naissance) { a.bebe = true; a.ne = jour(); }
+  etat.animaux.push(a);
+  achatEnCours = null;
+  fermer("vNom");
+  son("coeur");
+  sauver();
+  monterAnimal(a);
+  majChores();
+  majBoutons();
+}
+function ouvrirNomRanch() {
+  $("ranchChamp").value = etat.nom || "";
+  $("ranchMsg").textContent = "";
+  if (!$("ranchChamp").value) proposerNomRanch();
+  $("vNomRanch").hidden = false;
+}
+function proposerNomRanch() {
+  $("ranchChamp").value = NOMS_RANCH[Math.floor(Math.random() * NOMS_RANCH.length)];
+}
+function validerNomRanch() {
+  const nom = $("ranchChamp").value.trim().slice(0, 22);
+  if (!nom) { $("ranchMsg").textContent = "Il faut un nom à ton ranch !"; return; }
+  etat.nom = nom;
+  fermer("vNomRanch");
+  son("achat");
+  sauver();
+  toutMonter();
+  if (!etat.animaux.length) demanderNom("poule", true);
+}
+
+// ——— Affichages divers ———
+function echap(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function majPieces() {
+  $("hudPieces").textContent = "🪙 " + pieces();
+  if (!$("vShop").hidden) $("shopPieces").textContent = pieces() + " 🪙";
+}
+function majBoutons() {
+  $("btnSaloon").hidden = !!visite;
+  $("btnVoisins").hidden = !!visite;
+  $("btnShop").hidden = !!visite;
+  if (visite) return;
+  // pastille sur le saloon quand la commande est livrable
+  const cmd = commandeDuJour();
+  const j = jour();
+  const recolte = etat.recolte.jour === j ? etat.recolte.n : {};
+  const livrable = cmd && etat.saloon !== j && cmd.every(c => (recolte[ESPECES[c.t].cle] || 0) >= c.q);
+  $("btnSaloon").innerHTML = "📜" + (livrable ? "<span class='puce'>!</span>" : "");
+}
+let fileAnnonces = [];
+function annonce(texte) {
+  fileAnnonces.push(texte);
+  if (fileAnnonces.length === 1) prochaineAnnonce();
+}
+function prochaineAnnonce() {
+  const texte = fileAnnonces[0];
+  if (!texte) return;
+  const old = $("annonce");
+  if (old) old.remove();
+  const el = document.createElement("div");
+  el.id = "annonce";
+  el.innerHTML = texte;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.remove();
+    fileAnnonces.shift();
+    prochaineAnnonce();
+  }, 3400);
+}
+
+// ——— Passage à un nouveau jour pendant que la page est ouverte ———
+let jourAffiche = null;
+function surveillerJour() {
+  jourAffiche = jour();
+  setInterval(() => {
+    themeHeure();
+    if (jour() !== jourAffiche) {
+      jourAffiche = jour();
+      if (!visite) {
+        etat.animaux.forEach(majAnimal);
+        majChores();
+        monterPotager();
+        monterEvenement();
+        monterSaison();
+        majBoutons();
+      }
+    }
+  }, 30000);
+}
+
+// ——— Départ ———
+(async function () {
+  themeHeure();
+  monterDecorFixe();
+  monterSaison();
+  await charger();
+  toutMonter();
+  majPieces();
+  majBoutons();
+  surveillerJour();
+  monterEvenement();
+  annoncerCoeursRecus();
+  verifierNaissance();
+  $("btnShop").addEventListener("click", ouvrirShop);
+  $("btnSaloon").addEventListener("click", ouvrirSaloon);
+  $("btnVoisins").addEventListener("click", ouvrirVoisins);
+  $("panneau").addEventListener("click", () => { if (!visite) ouvrirNomRanch(); });
+  $("btnRetour").addEventListener("click", (ev) => { if (visite) { ev.preventDefault(); rentrer(); } });
+  $("btnAdopter").addEventListener("click", () => {
+    fermer("vBienvenue");
+    ouvrirNomRanch();
+  });
+  if (!etat.animaux.length && !etat.nom) $("vBienvenue").hidden = false;
+  window.addEventListener("pageshow", () => { if (modeSb && !visite) rafraichirCoins(); });
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
