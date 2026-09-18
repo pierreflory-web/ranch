@@ -1329,6 +1329,12 @@ function validerNom() {
   };
   if (achatEnCours.naissance) { a.bebe = true; a.ne = jour(); }
   etat.animaux.push(a);
+  const esp = ESPECES[a.t].nom.toLowerCase();
+  if (achatEnCours.naissance) {
+    nouvelle("🐣", "Un bébé " + esp + " est né chez " + (session ? session.pseudo : "") + " : " + nom + " !");
+  } else if (!achatEnCours.gratuit) {
+    nouvelle(ESPECES[a.t].emoji, session && session.pseudo ? session.pseudo + " a adopté " + nom + ", " + (FEMININES[a.t] ? "une " : "un ") + esp + " !" : "");
+  }
   achatEnCours = null;
   fermer("vNom");
   son("coeur");
@@ -1349,12 +1355,20 @@ function proposerNomRanch() {
 function validerNomRanch() {
   const nom = $("ranchChamp").value.trim().slice(0, 22);
   if (!nom) { $("ranchMsg").textContent = "Il faut un nom à ton ranch !"; return; }
+  const ouverture = !etat.nom && !etat.animaux.length;
   etat.nom = nom;
+  if (ouverture && session) nouvelle("🤠", session.pseudo + " a ouvert son ranch : « " + nom + " » !");
   fermer("vNomRanch");
   son("achat");
   sauver();
   toutMonter();
   if (!etat.animaux.length) demanderNom("poule", true);
+}
+
+// ——— Nouvelles pour le journal du saloon ———
+const FEMININES = { poule: true, chevre: true, vache: true };
+function nouvelle(emoji, texte) {
+  if (modeSb && session && window.MesJeux && MesJeux.evenement) MesJeux.evenement(emoji, texte);
 }
 
 // ——— Affichages divers ———

@@ -1,4 +1,4 @@
-const CACHE = 'ranch-v1';
+const CACHE = 'ranch-v2';
 const ASSETS = [
   '.',
   'index.html',
