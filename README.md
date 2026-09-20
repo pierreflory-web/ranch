@@ -16,14 +16,17 @@ et agrandit son enclos.
 
 - **Panneau** : l'enfant nomme son ranch (modifiable via la boutique ou en touchant le panneau).
 - **Boutique** : animaux (poule 15 🪙 → cheval 130 🪙, gains +1 → +6 🪙/jour),
-  agrandissements d'enclos (3 → 5 → 7 → 10 places), graines de potager, décorations.
+  agrandissements d'enclos (4 → 8 → 12 → 16 places), graines de potager, et
+  décorations à poser soi-même dans le grand pré (achats multiples).
 - **Potager** : jusqu'à 4 carrés ; arroser 💧 chaque jour, récolter au bout de 2 à 4 jours.
 - **Bébés animaux** : avec 2 adultes de la même espèce, une naissance environ une fois
   par mois (tirage quotidien déterministe + délai de 20 jours) ; le bébé grandit en 3 jours.
 - **Commande du saloon** 📜 : une commande par jour tirée des animaux possédés ;
   livrer la récolte du jour rapporte des points (`MesJeux.award('saloon', …)`).
-- **Événement du jour** : certains jours, un renard 🦊 à chasser (3 touches, +10 🪙)
-  ou un marchand ambulant (récoltes doublées). Même tirage pour toute la famille.
+- **Événement du jour** (même tirage pour toute la famille) : renard 🦊 à chasser
+  (3 touches, +10 🪙), marchand ambulant (récoltes doublées), pluie 🌧️ qui arrose
+  le potager, trèfle 🍀 caché dans le grand pré (+8 🪙), ou jour des câlins 💝
+  (+1 🪙 par câlin, 5 au maximum).
 - **Visites** 👋 : voir le ranch des autres joueurs (lecture seule) et laisser un ❤️
   par jour ; le propriétaire est prévenu à sa prochaine visite.
 - **Saisons et heure** : ciel du soir, nuit étoilée (21 h – 7 h, animaux endormis),
