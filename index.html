@@ -451,6 +451,7 @@ const GRAINES = {
 const POTAGER_MAX = 4;
 const RECOMPENSE_SALOON = 15;
 const RECOMPENSE_RENARD = 10;
+const RECOMPENSE_TREFLE = 8;
 
 // ——— Date, graine aléatoire ———
 function jour() {
@@ -492,7 +493,7 @@ let visite = null;        // { pseudo, avatar, id, etat } pendant une visite
 
 function etatNeuf() {
   return { nom: "", animaux: [], enclos: 0, decos: [], potager: [], care: "", soins: 0,
-    saloon: "", recolte: { jour: "", n: {} }, renard: "", bebeDernier: jour(),
+    saloon: "", recolte: { jour: "", n: {} }, renard: "", trefle: "", calins: { jour: "", n: 0 }, bebeDernier: jour(),
     coeurs: [], coeursVus: 0, creele: jour() };
 }
 function normaliser(e) {
@@ -684,7 +685,7 @@ function nomAffiche() {
 function toutMonter() {
   Object.values(timers).forEach(clearTimeout);
   timers = {}; elAnimaux = {};
-  document.querySelectorAll(".animal, .deco, .mare, #renard").forEach(n => n.remove());
+  document.querySelectorAll(".animal, .deco, .mare, #renard, #trefle").forEach(n => n.remove());
   const e = etatAffiche();
   $("hudTitre").textContent = nomAffiche();
   $("panneau").hidden = !e.nom;
@@ -840,6 +841,20 @@ function toucher(id) {
     h.style.left = (r.left + r.width / 2 - 10) + "px"; h.style.top = (r.top - 4) + "px";
     document.body.appendChild(h);
     setTimeout(() => h.remove(), 1200);
+    if (evenementDuJour() === "calins") {
+      if (etat.calins.jour !== jour()) etat.calins = { jour: jour(), n: 0 };
+      if (etat.calins.n < 5) {
+        etat.calins.n++;
+        if (modeSb) coinDelta += 1; else coinsLocal += 1;
+        majPieces();
+        sauver();
+        const f = document.createElement("div");
+        f.className = "flotte"; f.textContent = "+1 🪙";
+        f.style.left = r.left + "px"; f.style.top = (r.top - 24) + "px";
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 1300);
+      }
+    }
   }
 }
 function volerVersBourse(depuisEl, emoji, gain) {
@@ -925,8 +940,11 @@ function arroser(i) {
 // ——— Événement du jour ———
 function evenementDuJour() {
   const r = mulberry(daySeed() + 77)();
-  if (r < 0.2) return "renard";
-  if (r < 0.38) return "marchand";
+  if (r < 0.16) return "renard";
+  if (r < 0.30) return "marchand";
+  if (r < 0.42) return "pluie";
+  if (r < 0.56) return "trefle";
+  if (r < 0.68) return "calins";
   return "";
 }
 function monterEvenement() {
@@ -943,7 +961,49 @@ function monterEvenement() {
     b.innerHTML = "🦊 <b>Un renard rôde !</b> Touche-le 3 fois pour le chasser (+" + RECOMPENSE_RENARD + " 🪙).";
     b.hidden = false;
     monterRenard();
+  } else if (ev === "pluie" && etat.potager.length) {
+    let arrosees = 0;
+    etat.potager.forEach(pl => {
+      const g = GRAINES[pl.g];
+      if (pl.arrose.length < g.jours && pl.arrose.indexOf(jour()) === -1) { pl.arrose.push(jour()); arrosees++; }
+    });
+    if (arrosees) { sauver(); monterPotager(); }
+    b.classList.add("marchand");
+    b.innerHTML = "🌧️ <b>Il a plu cette nuit !</b> Ton potager est déjà arrosé pour aujourd'hui.";
+    b.hidden = false;
+  } else if (ev === "trefle" && etat.trefle !== jour()) {
+    b.classList.add("marchand");
+    b.innerHTML = "🍀 <b>Un trèfle porte-bonheur</b> est caché quelque part dans le pré — pars le chercher ! (+" + RECOMPENSE_TREFLE + " 🪙)";
+    b.hidden = false;
+    monterTrefle();
+  } else if (ev === "calins") {
+    b.classList.add("marchand");
+    b.innerHTML = "💝 <b>Jour des câlins !</b> Chaque câlin à un animal heureux rapporte +1 🪙 (5 au maximum).";
+    b.hidden = false;
   }
+}
+function monterTrefle() {
+  if ($("trefle")) return;
+  const rnd = mulberry(daySeed() + 9);
+  const el = document.createElement("div");
+  el.id = "trefle";
+  el.textContent = "🍀";
+  el.style.cssText = "position:absolute;font-size:30px;z-index:9;cursor:pointer;filter:drop-shadow(0 2px 2px #00000030);";
+  el.style.left = (10 + rnd() * 80) + "%";
+  el.style.top = (40 + rnd() * 45) + "%";
+  el.addEventListener("click", () => {
+    if (etat.trefle === jour()) return;
+    etat.trefle = jour();
+    if (modeSb) coinDelta += RECOMPENSE_TREFLE; else coinsLocal += RECOMPENSE_TREFLE;
+    majPieces();
+    sauver();
+    son("fete");
+    volerVersBourse(el, "🍀", RECOMPENSE_TREFLE);
+    el.remove();
+    $("bandeau-evenement").hidden = true;
+    annonce("🍀 Trouvé ! Le trèfle porte-bonheur te donne +" + RECOMPENSE_TREFLE + " 🪙 !");
+  });
+  $("monde").appendChild(el);
 }
 let renardTaps = 0;
 function monterRenard() {
@@ -1316,7 +1376,7 @@ function annulerPlacement(rembourse) {
 }
 function poserDeco(ev) {
   if (!placement || visite) return;
-  if (ev.target.closest(".animal, .plot, #panneau, #renard, #potager")) return;
+  if (ev.target.closest(".animal, .plot, #panneau, #renard, #trefle, #potager")) return;
   const r = $("monde").getBoundingClientRect();
   const x = Math.min(96, Math.max(3, (ev.clientX - r.left) / r.width * 100));
   const y = Math.min(94, Math.max(33, (ev.clientY - r.top) / r.height * 100));
