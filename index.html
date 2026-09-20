@@ -54,24 +54,27 @@
   header .pieces { font-size: 16px; font-weight: bold; color: var(--gold); background: var(--panel);
     border: 1px solid var(--panel-border); border-radius: 10px; padding: 7px 10px; white-space: nowrap; }
 
-  /* ——— Scène ——— */
-  #scene { position: fixed; inset: 0; overflow: hidden; }
-  #ciel { position: absolute; inset: 0; transition: background 2s; background: linear-gradient(#8fd3f4 0%, #cdeffd 34%, #cdeffd 100%); }
+  /* ——— Scène : un grand pré qu'on parcourt en glissant ——— */
+  #scene { position: fixed; inset: 0; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #scene::-webkit-scrollbar { display: none; }
+  #monde { position: relative; width: 220vw; min-width: 820px; height: 100%; }
+  #ciel { position: fixed; inset: 0; transition: background 2s; background: linear-gradient(#8fd3f4 0%, #cdeffd 34%, #cdeffd 100%); }
   body.soir #ciel { background: linear-gradient(#f5a623 0%, #fdd8a8 34%, #fde9c8 100%); }
   body.nuit #ciel { background: linear-gradient(#141034 0%, #2a2560 34%, #3a3172 100%); }
   body.automne #ciel { background: linear-gradient(#e8a25e 0%, #f5cf9b 34%, #f8e3c0 100%); }
   body.hiver #ciel { background: linear-gradient(#a8c8e8 0%, #dceaf8 34%, #eef5fc 100%); }
 
   #soleil {
-    position: absolute; top: 9%; right: 12%; width: 62px; height: 62px; border-radius: 50%;
+    position: fixed; top: 9%; right: 12%; width: 62px; height: 62px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #fff8c8, #ffd93b 65%, #ffb52e);
     box-shadow: 0 0 46px #ffe27a99;
   }
   body.nuit #soleil { background: radial-gradient(circle at 38% 34%, #ffffff, #e8e6ff 60%, #b9b4e8); box-shadow: 0 0 34px #ffffff55; }
-  .etoile { position: absolute; color: #fff; font-size: 11px; opacity: 0; transition: opacity 1.5s; pointer-events: none; }
+  .etoile { position: fixed; color: #fff; font-size: 11px; opacity: 0; transition: opacity 1.5s; pointer-events: none; }
   body.nuit .etoile { opacity: .9; animation: scintille 2.6s infinite alternate; }
   @keyframes scintille { from { opacity: .35; } to { opacity: 1; } }
-  .nuage { position: absolute; font-size: 44px; opacity: .92; animation: derive linear infinite; pointer-events: none; }
+  .nuage { position: fixed; font-size: 44px; opacity: .92; animation: derive linear infinite; pointer-events: none; }
   body.nuit .nuage { opacity: .25; }
   @keyframes derive { from { transform: translateX(-120px); } to { transform: translateX(110vw); } }
 
@@ -101,7 +104,7 @@
   body.nuit #grange { filter: brightness(.6) drop-shadow(0 6px 8px #00000066); }
 
   /* Panneau du ranch */
-  #panneau { position: absolute; right: 3%; top: 20.5%; width: 140px; text-align: center; cursor: pointer; z-index: 6; }
+  #panneau { position: absolute; left: 30%; top: 20.5%; width: 140px; text-align: center; cursor: pointer; z-index: 6; }
   #panneau .pancarte {
     background: linear-gradient(#a06a33, var(--wood)); border: 2px solid var(--wood-dark);
     border-radius: 8px; padding: 6px; font-size: 13px; font-weight: bold; color: var(--cream);
@@ -140,7 +143,7 @@
   /* Décors */
   .deco { position: absolute; pointer-events: none; z-index: 5; filter: drop-shadow(0 3px 3px #00000030); margin-left: -18px; }
   .saison { position: absolute; pointer-events: none; z-index: 5; filter: drop-shadow(0 3px 3px #00000030); }
-  .particule { position: absolute; top: -50px; pointer-events: none; z-index: 40; animation: chute linear infinite; }
+  .particule { position: fixed; top: -50px; pointer-events: none; z-index: 40; animation: chute linear infinite; }
   @keyframes chute { to { transform: translateY(115vh) rotate(300deg); } }
   .mare { position: absolute; width: 120px; height: 52px; margin-left: -60px; z-index: 4;
     background: radial-gradient(ellipse at 50% 45%, #9fdcf0, #4f9fd9 78%); border-radius: 50%; border: 4px solid #6da746; }
@@ -243,7 +246,7 @@
   .voisin .av { font-size: 30px; }
   .voisin small { color: var(--muted); display: block; font-size: 13px; }
 
-  #bandeau-visite { position: fixed; top: calc(56px + env(safe-area-inset-top)); left: 10px; right: 10px; z-index: 45;
+  #bandeau-visite, #bandeau-placement { position: fixed; top: calc(56px + env(safe-area-inset-top)); left: 10px; right: 10px; z-index: 45;
     background: #2a1445e0; border: 1px solid var(--panel-border); border-radius: 14px;
     padding: 8px 12px; text-align: center; font-size: 13px; color: var(--muted); }
 
@@ -280,6 +283,7 @@
 <div id="scene">
   <div id="ciel"></div>
   <div id="soleil"></div>
+  <div id="monde">
   <div id="collines">
     <svg viewBox="0 0 100 40" preserveAspectRatio="none">
       <path d="M0 40 L0 26 Q 18 12 38 24 Q 58 34 74 20 Q 88 10 100 22 L100 40 Z" fill="#5f9440"/>
@@ -301,9 +305,11 @@
     <div class="pied"></div>
   </div>
   <div id="potager" hidden><div class="etiquette">Potager</div></div>
+  </div>
 </div>
 
 <div id="bandeau-visite" hidden></div>
+<div id="bandeau-placement" hidden></div>
 <div id="bandeau-evenement" hidden></div>
 
 <footer>
@@ -424,10 +430,10 @@ const PRENOMS = {
 const NOMS_RANCH = ["Ranch de la Prairie", "Ranch Arc-en-ciel", "Ranch du Cactus", "Ranch des Étoiles",
   "Ranch du Grand Canyon", "Ranch de la Pépite d'Or", "Ranch des Trois Collines", "Ranch du Soleil Levant"];
 const ENCLOS = [
-  { cap: 3 },
-  { cap: 5,  prix: 60 },
-  { cap: 7,  prix: 120 },
-  { cap: 10, prix: 220 }
+  { cap: 4 },
+  { cap: 8,  prix: 60 },
+  { cap: 12, prix: 120 },
+  { cap: 16, prix: 220 }
 ];
 const DECOS = {
   fleurs:  { emoji: "🌼", nom: "Coin fleuri",      prix: 12, x: 10, y: 46 },
@@ -492,6 +498,8 @@ function etatNeuf() {
 function normaliser(e) {
   const n = etatNeuf();
   for (const k in n) if (e[k] === undefined) e[k] = n[k];
+  e.decos = (e.decos || []).map(d => typeof d === "string" ? { t: d, x: (DECOS[d] || {}).x || 50, y: (DECOS[d] || {}).y || 60 } : d)
+    .filter(d => d && DECOS[d.t]);
   return e;
 }
 function pieces() { return modeSb ? serverCoins + coinDelta : coinsLocal; }
@@ -604,14 +612,14 @@ function monterDecorFixe() {
     e.style.left = Math.random() * 96 + "%";
     e.style.top = Math.random() * 24 + "%";
     e.style.animationDelay = Math.random() * 2 + "s";
-    $("scene").insertBefore(e, $("collines"));
+    $("scene").insertBefore(e, $("monde"));
   }
-  [["☁️", 6, 60], ["☁️", 14, 95], ["🌤️", 2, 120]].forEach(([em, top, dur]) => {
+  [["☁️", 6, 60], ["☁️", 14, 95], ["☁️", 2, 120]].forEach(([em, top, dur]) => {
     const n = document.createElement("div");
     n.className = "nuage"; n.textContent = em;
     n.style.top = top + "%"; n.style.animationDuration = dur + "s";
     n.style.animationDelay = -Math.random() * dur + "s";
-    $("scene").insertBefore(n, $("collines"));
+    $("scene").insertBefore(n, $("monde"));
   });
   const c = $("cloture");
   for (let p = 0; p <= 100; p += 7) {
@@ -647,7 +655,7 @@ function monterSaison() {
     const n = document.createElement("div");
     n.className = "saison"; n.textContent = em;
     n.style.left = x + "%"; n.style.top = y + "%"; n.style.fontSize = taille + "px";
-    $("scene").appendChild(n);
+    $("monde").appendChild(n);
   });
   particules.forEach(([em, dur], i) => {
     const n = document.createElement("div");
@@ -661,7 +669,7 @@ function monterSaison() {
 }
 
 // ——— Rendu du ranch (le sien, ou celui d'un voisin) ———
-const ZONE = { x0: 8, x1: 88, y0: 38, y1: 84 };
+const ZONE = { x0: 5, x1: 94, y0: 38, y1: 84 };
 let elAnimaux = {};
 let timers = {};
 
@@ -688,16 +696,17 @@ function toutMonter() {
 }
 
 function monterDecos() {
+  document.querySelectorAll(".deco, .mare").forEach(n => n.remove());
   const e = etatAffiche();
-  e.decos.forEach(id => {
-    const d = DECOS[id];
-    if (!d) return;
+  e.decos.forEach(deco => {
+    const id = deco.t;
+    const d = { emoji: DECOS[id].emoji, x: deco.x, y: deco.y };
     if (id === "mare") {
       const m = document.createElement("div");
       m.className = "mare";
       m.style.left = d.x + "%"; m.style.top = d.y + "%";
       m.innerHTML = "<span class='canard'>🦆</span>";
-      $("scene").appendChild(m);
+      $("monde").appendChild(m);
     } else if (id === "fleurs") {
       const n = document.createElement("div");
       n.className = "deco";
@@ -708,13 +717,13 @@ function monterDecos() {
         "<span style='position:absolute;left:56px;top:12px;font-size:30px;'>🌸</span>" +
         "<span style='position:absolute;left:20px;top:30px;font-size:26px;'>🌻</span>" +
         "<span style='position:absolute;left:48px;top:34px;font-size:24px;'>🌷</span>";
-      $("scene").appendChild(n);
+      $("monde").appendChild(n);
     } else {
       const n = document.createElement("div");
       n.className = "deco"; n.textContent = d.emoji;
       n.style.left = d.x + "%"; n.style.top = d.y + "%";
       n.style.fontSize = (id === "arbre" || id === "tracteur") ? "52px" : "36px";
-      $("scene").appendChild(n);
+      $("monde").appendChild(n);
     }
   });
 }
@@ -736,7 +745,7 @@ function monterAnimal(a) {
   el.style.left = (ZONE.x0 + Math.random() * (ZONE.x1 - ZONE.x0)) + "%";
   el.style.top = (ZONE.y0 + Math.random() * (ZONE.y1 - ZONE.y0)) + "%";
   el.addEventListener("click", () => toucher(a.id));
-  $("scene").appendChild(el);
+  $("monde").appendChild(el);
   elAnimaux[a.id] = el;
   majAnimal(a);
   balade(a.id);
@@ -964,7 +973,7 @@ function monterRenard() {
       el.style.left = nx + "%"; el.style.top = ny + "%";
     }
   });
-  $("scene").appendChild(el);
+  $("monde").appendChild(el);
   // le renard se déplace tout seul
   (function file() {
     if (!document.getElementById("renard") || etat.renard === jour()) return;
@@ -1064,6 +1073,7 @@ function commandeDuJour() {
   return choisis;
 }
 function ouvrirSaloon() {
+  annulerPlacement(true);
   const cmd = commandeDuJour();
   const j = jour();
   const recolte = etat.recolte.jour === j ? etat.recolte.n : {};
@@ -1116,6 +1126,7 @@ function livrerSaloon() {
 
 // ——— Visites des voisins ———
 async function ouvrirVoisins() {
+  annulerPlacement(true);
   if (!modeSb) {
     $("voisinsContenu").innerHTML = "<p class='sous'>Connecte-toi sur « Mes Jeux » pour visiter les ranchs de la famille !</p>";
     $("vVoisins").hidden = false;
@@ -1214,7 +1225,7 @@ function annoncerCoeursRecus() {
 
 // ——— Boutique ———
 let achatEnCours = null;
-function ouvrirShop() { $("vShop").hidden = false; rendreShop(); }
+function ouvrirShop() { annulerPlacement(true); $("vShop").hidden = false; rendreShop(); }
 function fermer(id) { $(id).hidden = true; }
 function rendreShop() {
   $("shopPieces").textContent = pieces() + " 🪙";
@@ -1246,14 +1257,13 @@ function rendreShop() {
       "<div class='infos'><b>" + g.nom + "</b><small>Arrose 💧 " + g.jours + " jours ➜ récolte +" + g.gain + " 🪙</small></div>" +
       "<button class='btn' " + (plein || pieces() < g.prix ? "disabled" : "") + " onclick=\"planter('" + gid + "')\">" + g.prix + " 🪙</button></div>";
   }
-  h += "<div class='rayon'>🌼 Les décorations</div>";
+  h += "<div class='rayon'>🌼 Les décorations <small style='color:var(--muted);font-weight:normal;'>(tu choisis où les poser)</small></div>";
   for (const id in DECOS) {
     const d = DECOS[id];
-    const a = etat.decos.indexOf(id) !== -1;
+    const n = etat.decos.filter(x => x.t === id).length;
     h += "<div class='article'><div class='em'>" + d.emoji + "</div>" +
-      "<div class='infos'><b>" + d.nom + "</b><small>Pour embellir ton ranch</small></div>" +
-      (a ? "<span class='ok'>installé ✔</span>"
-         : "<button class='btn' " + (pieces() < d.prix ? "disabled" : "") + " onclick=\"acheterDeco('" + id + "')\">" + d.prix + " 🪙</button>");
+      "<div class='infos'><b>" + d.nom + "</b><small>" + (n ? "Déjà " + n + " dans ton ranch — un de plus ?" : "Pour embellir ton ranch") + "</small></div>" +
+      "<button class='btn' " + (pieces() < d.prix || etat.decos.length >= DECO_MAX ? "disabled" : "") + " onclick=\"acheterDeco('" + id + "')\">" + d.prix + " 🪙</button>";
     h += "</div>";
   }
   h += "<div class='rayon'>🪧 Le panneau</div>" +
@@ -1283,13 +1293,39 @@ function agrandir() {
   sauver();
   rendreShop();
 }
+const DECO_MAX = 24;
+let placement = null;
 function acheterDeco(id) {
-  if (etat.decos.indexOf(id) !== -1 || !payer(DECOS[id].prix)) return;
-  etat.decos.push(id);
+  if (etat.decos.length >= DECO_MAX) { annonce("Ton ranch est bien rempli — " + DECO_MAX + " décorations maximum !"); return; }
+  if (!payer(DECOS[id].prix)) return;
+  son("achat");
+  fermer("vShop");
+  placement = { t: id };
+  $("bandeau-placement").innerHTML = DECOS[id].emoji + " Touche le pré à l'endroit où poser : <b style='color:var(--gold)'>" + DECOS[id].nom + "</b>";
+  $("bandeau-placement").hidden = false;
+}
+function annulerPlacement(rembourse) {
+  if (!placement) return;
+  if (rembourse) {
+    if (modeSb) coinDelta += DECOS[placement.t].prix; else coinsLocal += DECOS[placement.t].prix;
+    majPieces();
+    annonce("Décoration remboursée — tu la reprendras plus tard !");
+  }
+  placement = null;
+  $("bandeau-placement").hidden = true;
+}
+function poserDeco(ev) {
+  if (!placement || visite) return;
+  if (ev.target.closest(".animal, .plot, #panneau, #renard, #potager")) return;
+  const r = $("monde").getBoundingClientRect();
+  const x = Math.min(96, Math.max(3, (ev.clientX - r.left) / r.width * 100));
+  const y = Math.min(94, Math.max(33, (ev.clientY - r.top) / r.height * 100));
+  etat.decos.push({ t: placement.t, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+  placement = null;
+  $("bandeau-placement").hidden = true;
   son("achat");
   sauver();
-  toutMonter();
-  ouvrirShop();
+  monterDecos();
 }
 function planter(gid) {
   if (etat.potager.length >= POTAGER_MAX || !payer(GRAINES[gid].prix)) return;
@@ -1445,6 +1481,7 @@ function surveillerJour() {
   monterEvenement();
   annoncerCoeursRecus();
   verifierNaissance();
+  $("monde").addEventListener("click", poserDeco);
   $("btnShop").addEventListener("click", ouvrirShop);
   $("btnSaloon").addEventListener("click", ouvrirSaloon);
   $("btnVoisins").addEventListener("click", ouvrirVoisins);
