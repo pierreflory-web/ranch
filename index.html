@@ -412,12 +412,18 @@ const SB_KEY = "sb_publishable_Y9EMQFz64Vt0n1GAs9wv1A_ciDRgNVz";
 const $ = id => document.getElementById(id);
 
 const ESPECES = {
-  poule:  { emoji: "🐔", nom: "Poule",  prix: 15,  produit: "🥚", cle: "oeuf",    produitNom: "un œuf",             unite: "œuf frais",      gain: 1 },
-  mouton: { emoji: "🐑", nom: "Mouton", prix: 35,  produit: "🧶", cle: "laine",   produitNom: "de la laine",        unite: "pelote de laine", gain: 2 },
-  chevre: { emoji: "🐐", nom: "Chèvre", prix: 50,  produit: "🧀", cle: "fromage", produitNom: "du fromage",         unite: "part de fromage", gain: 3 },
-  cochon: { emoji: "🐖", nom: "Cochon", prix: 70,  produit: "🍄", cle: "truffe",  produitNom: "une truffe",         unite: "truffe",          gain: 4 },
-  vache:  { emoji: "🐄", nom: "Vache",  prix: 90,  produit: "🥛", cle: "lait",    produitNom: "du lait",            unite: "pot de lait",     gain: 5 },
-  cheval: { emoji: "🐴", nom: "Cheval", prix: 130, produit: "🍀", cle: "trefle",  produitNom: "un trèfle chanceux", unite: "trèfle chanceux", gain: 6 }
+  poule:      { emoji: "🐔", nom: "Poule",      prix: 15,  produit: "🥚", cle: "oeuf",    produitNom: "un œuf",                 unite: "œuf frais",           gain: 1 },
+  canard:     { emoji: "🦆", nom: "Canard",     prix: 25,  produit: "🪶", cle: "plume",   produitNom: "une plume toute douce",  unite: "plume douce",         gain: 2 },
+  mouton:     { emoji: "🐑", nom: "Mouton",     prix: 35,  produit: "🧶", cle: "laine",   produitNom: "de la laine",            unite: "pelote de laine",     gain: 2 },
+  lapin:      { emoji: "🐰", nom: "Lapin",      prix: 45,  produit: "🧦", cle: "angora",  produitNom: "une chaussette d'angora", unite: "chaussette d'angora", gain: 3 },
+  chevre:     { emoji: "🐐", nom: "Chèvre",     prix: 50,  produit: "🧀", cle: "fromage", produitNom: "du fromage",             unite: "part de fromage",     gain: 3 },
+  cochon:     { emoji: "🐖", nom: "Cochon",     prix: 70,  produit: "🍄", cle: "truffe",  produitNom: "une truffe",             unite: "truffe",              gain: 4 },
+  abeilles:   { emoji: "🐝", nom: "Ruche",      prix: 80,  produit: "🍯", cle: "miel",    produitNom: "du miel doré",           unite: "pot de miel",         gain: 5 },
+  vache:      { emoji: "🐄", nom: "Vache",      prix: 90,  produit: "🥛", cle: "lait",    produitNom: "du lait",                unite: "pot de lait",         gain: 5 },
+  dromadaire: { emoji: "🐪", nom: "Dromadaire", prix: 110, produit: "🧺", cle: "panier",  produitNom: "un panier du désert",    unite: "panier du désert",    gain: 6 },
+  cheval:     { emoji: "🐴", nom: "Cheval",     prix: 130, produit: "🍀", cle: "trefle",  produitNom: "un trèfle chanceux",     unite: "trèfle chanceux",     gain: 6 },
+  lama:       { emoji: "🦙", nom: "Lama",       prix: 160, produit: "🧣", cle: "echarpe", produitNom: "une écharpe toute douce", unite: "écharpe douce",      gain: 8 },
+  bison:      { emoji: "🦬", nom: "Bison",      prix: 220, produit: "🤠", cle: "chapeau", produitNom: "un chapeau de feutre",   unite: "chapeau de feutre",   gain: 10 }
 };
 const PRENOMS = {
   poule:  ["Roussette", "Cocotte", "Pépite", "Plumette", "Caroline", "Crêtette"],
@@ -425,7 +431,13 @@ const PRENOMS = {
   chevre: ["Biquette", "Cabriole", "Noisette", "Chipie", "Caprice", "Filou"],
   cochon: ["Truffe", "Rosette", "Patapouf", "Groin-Groin", "Rondouillard", "Fripouille"],
   vache:  ["Marguerite", "Caramel", "Meuh-Meuh", "Biscotte", "Pâquerette", "Tachette"],
-  cheval: ["Tornade", "Éclair", "Galopin", "Crinière", "Étoile", "Mistral"]
+  cheval: ["Tornade", "Éclair", "Galopin", "Crinière", "Étoile", "Mistral"],
+  canard: ["Coin-Coin", "Barbotine", "Plumeau", "Flaque", "Colvert", "Cancanette"],
+  lapin:  ["Pirouette", "Flocon", "Moustache", "Grandes-Oreilles", "Bondissou", "Clapotin"],
+  abeilles: ["Butinette", "Bourdon", "Zinzoline", "Pollen", "Miellette", "Zzzoé"],
+  dromadaire: ["Sahara", "Dunette", "Mirage", "Caravane", "Sirocco", "Bosselou"],
+  lama:   ["Paco", "Pampa", "Caramelo", "Doudou", "Cusco", "Picchu"],
+  bison:  ["Tonnerre", "Costaud", "Prairie", "Bisou", "Tatanka", "Nuage"]
 };
 const NOMS_RANCH = ["Ranch de la Prairie", "Ranch Arc-en-ciel", "Ranch du Cactus", "Ranch des Étoiles",
   "Ranch du Grand Canyon", "Ranch de la Pépite d'Or", "Ranch des Trois Collines", "Ranch du Soleil Levant"];
@@ -1050,7 +1062,7 @@ function verifierNaissance() {
   if (joursEntre(etat.bebeDernier, jour()) < 20) return;
   const adultes = {};
   etat.animaux.forEach(a => { if (!a.bebe) adultes[a.t] = (adultes[a.t] || 0) + 1; });
-  const candidats = Object.keys(adultes).filter(t => adultes[t] >= 2);
+  const candidats = Object.keys(adultes).filter(t => adultes[t] >= 2 && t !== "abeilles");
   if (!candidats.length) return;
   if (etat.animaux.length >= ENCLOS[etat.enclos].cap) return;
   const rnd = mulberry(daySeed() + hachage(session ? String(session.id) : "local"));
@@ -1402,7 +1414,7 @@ function demanderNom(t, gratuit, naissance) {
   $("nomTitre").textContent = naissance ? "🎉 Un bébé est né !" : (gratuit ? "Ta première poule !" : "Un nouveau compagnon !");
   $("nomEmoji").textContent = naissance ? (t === "poule" ? "🐣" : ESPECES[t].emoji) : ESPECES[t].emoji;
   $("nomSous").textContent = (naissance ? "Tes " + ESPECES[t].nom.toLowerCase() + "s ont eu un petit ! " : "") +
-    "Comment veux-tu appeler " + (t === "poule" || t === "vache" || t === "chevre" ? "ta " : "ton ") +
+    "Comment veux-tu appeler " + (FEMININES[t] ? "ta " : "ton ") +
     (naissance ? "bébé " : "") + ESPECES[t].nom.toLowerCase() + " ?";
   $("nomMsg").textContent = "";
   $("nomChamp").value = "";
@@ -1462,7 +1474,7 @@ function validerNomRanch() {
 }
 
 // ——— Nouvelles pour le journal du saloon ———
-const FEMININES = { poule: true, chevre: true, vache: true };
+const FEMININES = { poule: true, chevre: true, vache: true, abeilles: true };
 function nouvelle(emoji, texte) {
   if (modeSb && session && window.MesJeux && MesJeux.evenement) MesJeux.evenement(emoji, texte);
 }
