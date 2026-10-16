@@ -351,6 +351,19 @@
   </div>
 </div>
 
+<!-- Vendre un animal -->
+<div class="voile" id="vConfirm" hidden>
+  <div class="fenetre">
+    <h2>💰 Vendre ?</h2>
+    <div class="grand-emoji" id="confEmoji"></div>
+    <p class="sous" id="confTexte" style="font-size:16px;"></p>
+    <div class="ligne-btn">
+      <button class="btn" onclick="fermer('vConfirm')">Non, je garde !</button>
+      <button class="btn or" id="confOui">Oui, vendre</button>
+    </div>
+  </div>
+</div>
+
 <!-- Baptême d'un animal -->
 <div class="voile" id="vNom" hidden>
   <div class="fenetre">
@@ -824,6 +837,7 @@ function toucher(id) {
       setTimeout(() => p.remove(), 1200);
     }
     a.fed = j;
+    a.soins = (a.soins || 0) + 1;
     if (a.bebe) a.got = j;
     setTimeout(() => {
       el.classList.remove("mange");
@@ -1297,6 +1311,40 @@ function annoncerCoeursRecus() {
   sauver();
 }
 
+// ——— Vendre un animal : plus il a été nourri, plus il vaut cher ———
+function valeurVente(a) {
+  const prix = ESPECES[a.t].prix;
+  return Math.min(prix * 2, Math.round(prix * 0.4) + (a.soins || 0));
+}
+function proposerVente(id) {
+  const a = etat.animaux.find(x => x.id === id);
+  if (!a) return;
+  const val = valeurVente(a);
+  $("confEmoji").textContent = ESPECES[a.t].emoji;
+  $("confTexte").innerHTML = "Vendre <b style='color:var(--gold)'>" + echap(a.nom) + "</b> pour <b style='color:var(--gold)'>" + val + " 🪙</b> ?<br>" +
+    (FEMININES[a.t] ? "Elle partira" : "Il partira") + " dans un bon ranch de la région…";
+  $("confOui").onclick = () => vendre(id);
+  fermer("vShop");
+  $("vConfirm").hidden = false;
+}
+function vendre(id) {
+  const i = etat.animaux.findIndex(x => x.id === id);
+  if (i === -1) return;
+  const a = etat.animaux[i];
+  const val = valeurVente(a);
+  etat.animaux.splice(i, 1);
+  if (modeSb) coinDelta += val; else coinsLocal += val;
+  fermer("vConfirm");
+  son("achat");
+  majPieces();
+  sauver();
+  toutMonter();
+  majBoutons();
+  annonce("💰 " + echap(a.nom) + " est parti" + (FEMININES[a.t] ? "e" : "") + " dans un bon ranch — +" + val + " 🪙 !");
+  nouvelle("💰", (session ? session.pseudo : "") + " a vendu " + a.nom + " " + (FEMININES[a.t] ? "la " : "le ") + ESPECES[a.t].nom.toLowerCase() + " pour " + val + " 🪙 !");
+  verifierJournee();
+}
+
 // ——— Boutique ———
 let achatEnCours = null;
 function ouvrirShop() { annulerPlacement(true); $("vShop").hidden = false; rendreShop(); }
@@ -1314,6 +1362,14 @@ function rendreShop() {
     h += "<div class='article'><div class='em'>" + e.emoji + "</div>" +
       "<div class='infos'><b>" + e.nom + "</b><small>Donne " + e.produit + " " + e.produitNom + " chaque jour (+" + e.gain + " 🪙)</small></div>" +
       "<button class='btn' " + (plein || cher ? "disabled" : "") + " onclick=\"acheterAnimal('" + t + "')\">" + e.prix + " 🪙</button></div>";
+  }
+  if (etat.animaux.length) {
+    h += "<div class='rayon'>💰 Vendre un animal <small style='color:var(--muted);font-weight:normal;'>(plus tu l'as nourri, plus il vaut cher !)</small></div>";
+    etat.animaux.forEach(a => {
+      h += "<div class='article'><div class='em'>" + ESPECES[a.t].emoji + "</div>" +
+        "<div class='infos'><b>" + echap(a.nom) + "</b><small>" + ESPECES[a.t].nom + (estBebe(a) ? " (bébé)" : "") + " — nourri" + (FEMININES[a.t] ? "e" : "") + " " + (a.soins || 0) + " fois</small></div>" +
+        "<button class='btn' onclick=\"proposerVente('" + a.id + "')\">" + valeurVente(a) + " 🪙</button></div>";
+    });
   }
   h += "<div class='rayon'>🚧 L'enclos</div>";
   if (suivant) {

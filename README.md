@@ -18,6 +18,8 @@ et agrandit son enclos.
 - **Boutique** : animaux (poule 15 🪙 → cheval 130 🪙, gains +1 → +6 🪙/jour),
   agrandissements d'enclos (4 à 30 places, en six paliers), graines de potager, et
   décorations à poser soi-même dans le grand pré (achats multiples).
+- **Vente d'animaux** : depuis la boutique, avec confirmation ; valeur = 40 % du prix
+  d'achat + 1 🪙 par repas donné (plafond : deux fois le prix d'achat).
 - **Potager** : jusqu'à 4 carrés ; arroser 💧 chaque jour, récolter au bout de 2 à 4 jours.
 - **Bébés animaux** : avec 2 adultes de la même espèce, une naissance environ une fois
   par mois (tirage quotidien déterministe + délai de 20 jours) ; le bébé grandit en 3 jours.
