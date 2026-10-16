@@ -16,7 +16,7 @@ et agrandit son enclos.
 
 - **Panneau** : l'enfant nomme son ranch (modifiable via la boutique ou en touchant le panneau).
 - **Boutique** : animaux (poule 15 🪙 → cheval 130 🪙, gains +1 → +6 🪙/jour),
-  agrandissements d'enclos (4 → 8 → 12 → 16 places), graines de potager, et
+  agrandissements d'enclos (4 à 30 places, en six paliers), graines de potager, et
   décorations à poser soi-même dans le grand pré (achats multiples).
 - **Potager** : jusqu'à 4 carrés ; arroser 💧 chaque jour, récolter au bout de 2 à 4 jours.
 - **Bébés animaux** : avec 2 adultes de la même espèce, une naissance environ une fois
